@@ -1,0 +1,7 @@
+__pycache__/
+.venv/
+*.db
+*.db-wal
+*.backup
+data/*.db
+teddy/__pycache__/

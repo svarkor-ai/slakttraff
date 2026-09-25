@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Släktträff 2026 - Anmälan & Släktträd</title>
+    <style>
+        :root {
+            --primary: #8B4513;
+            --primary-light: #A0522D;
+            --primary-dark: #654321;
+            --accent: #D2691E;
+            --cream: #F5F1E8;
+            --warm-white: #FAF8F5;
+            --text-dark: #2C1810;
+            --text-muted: #5C4033;
+            --border: #D4C4B0;
+            --success: #228B22;
+            --shadow: rgba(139, 69, 19, 0.15);
+            --line-color: #8B4513;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', 'Palatino', serif;
+            background: linear-gradient(180deg, var(--cream) 0%, var(--warm-white) 100%);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 3rem 1.5rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5 L35 25 L55 25 L38 38 L45 58 L30 45 L15 58 L22 38 L5 25 L25 25 Z' fill='rgba(255,255,255,0.05)'/%3E%3C/svg%3E");
+            opacity: 0.3;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            position: relative;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        header p {
+            font-size: 1.2rem;
+            opacity: 0.95;
+            position: relative;
+        }
+
+        .subtitle {
+            font-style: italic;
+            margin-top: 0.5rem;
+            opacity: 0.9;
+            position: relative;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        /* Section styling */
+        section {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px var(--shadow);
+        }
+
+        section h2 {
+            color: var(--primary);
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        section h2::before {
+            content: '🌳';
+            font-size: 1.4rem;
+        }
+
+        /* Family Tree Styles with SVG Lines */
+        .family-tree {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 0;
+            position: relative;
+        }
+
+        .generation-row {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 0;
+            position: relative;
+        }
+
+        .generation-label {
+            width: 100%;
+            text-align: center;
+            font-weight: bold;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0.5rem;
+            background: var(--warm-white);
+            border-radius: 8px;
+        }
+
+        .generation-people {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 2rem;
+            width: 100%;
+            padding: 1rem;
+            position: relative;
+        }
+
+        .person-card {
+            background: linear-gradient(145deg, var(--warm-white) 0%, var(--cream) 100%);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            min-width: 140px;
+            max-width: 180px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        .person-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px var(--shadow);
+            border-color: var(--accent);
+        }
+
+        .person-card.generation-1 {
+            background: linear-gradient(145deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .person-card.generation-1:hover {
+            background: linear-gradient(145deg, var(--primary-light) 0%, var(--primary) 100%);
+        }
+
+        .person-name {
+            font-weight: bold;
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .person-role {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .person-card.generation-1 .person-role {
+            opacity: 0.9;
+        }
+
+        .person-card.empty {
+            border: 2px dashed #999 !important;
+            background: #f9f9f9 !important;
+            color: #666 !important;
+        }
+        .person-card.empty:hover {
+            border-color: #666 !important;
+            background: #eee !important;
+        }
+        .empty-placeholder {
+            font-style: italic;
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+
+        /* Family Group - visar grenar med linjer */
+        .family-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: rgba(139, 69, 19, 0.03);
+            border-radius: 12px;
+            border: 1px dashed var(--border);
+            position: relative;
+        }
+
+        .family-group-header {
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+            position: relative;
+        }
+
+        /* SVG Connector Lines */
+        .connector-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .connection-line {
+            stroke: var(--line-color);
+            stroke-width: 2;
+            fill: none;
+            stroke-dasharray: 5, 5;
+        }
+
+        .connection-line.vertical {
+            stroke-dasharray: 3, 3;
+        }
+
+        .generation-connector {
+            width: 100%;
+            height: 60px;
+            position: relative;
+            margin: 0;
+            background: transparent;
+        }
+
+        .family-group-children {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+            position: relative;
+        }
+
+        /* Sub-family groups */
+        .sub-family {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0.5rem;
+            padding: 0.75rem;
+            background: rgba(210, 105, 30, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(139, 69, 19, 0.2);
+        }
+
+        .sub-family-header {
+            font-weight: bold;
+            color: var(--primary-dark);
+            font-size: 0.9rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .sub-family-children {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 450px;
+            width: 100%;
+            position: relative;
+            animation: modalSlide 0.3s ease;
+        }
+
+        @keyframes modalSlide {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .modal-close:hover {
+            background: var(--cream);
+        }
+
+        .modal h3 {
+            color: var(--primary);
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .modal-info {
+            background: var(--cream);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .modal-info p {
+            margin: 0.5rem 0;
+        }
+
+        .modal-info strong {
+            color: var(--primary-dark);
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(210, 105, 30, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background: var(--warm-white);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .checkbox-item:hover {
+            background: var(--cream);
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: auto;
+            cursor: pointer;
+        }
+
+        .checkbox-item label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: normal;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--shadow);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Success Message */
+        .success-message {
+            display: none;
+            background: linear-gradient(135deg, #90EE90 0%, #228B22 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            animation: successPop 0.5s ease;
+        }
+
+        .success-message.active {
+            display: block;
+        }
+
+        @keyframes successPop {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .success-message h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .success-message p {
+            font-size: 1.1rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8rem;
+            }
+
+            header p {
+                font-size: 1rem;
+            }
+
+            section {
+                padding: 1.5rem;
+            }
+
+            section h2 {
+                font-size: 1.4rem;
+            }
+
+            .person-card {
+                min-width: 120px;
+                padding: 0.75rem 1rem;
+            }
+
+            .person-name {
+                font-size: 0.9rem;
+            }
+
+            .checkbox-group {
+                grid-template-columns: 1fr;
+            }
+
+            .family-group {
+                padding: 0.5rem;
+            }
+
+            .generation-people {
+                gap: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header {
+                padding: 2rem 1rem;
+            }
+
+            header h1 {
+                font-size: 1.5rem;
+            }
+
+            .container {
+                padding: 1rem 0.5rem;
+            }
+
+            section {
+                padding: 1rem;
+            }
+
+            .person-card {
+                min-width: 100px;
+                padding: 0.5rem 0.75rem;
+                font-size: 0.85rem;
+            }
+
+            .generation-people {
+                gap: 0.5rem;
+            }
+        }
+
+        /* Instructions */
+        .instructions {
+            background: var(--cream);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid var(--accent);
+        }
+
+        .instructions h4 {
+            color: var(--primary-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .instructions ul {
+            margin-left: 1.5rem;
+            color: var(--text-muted);
+        }
+
+        .instructions li {
+            margin: 0.25rem 0;
+        }
+
+        .tree-stats {
+            background: var(--warm-white);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .tree-stats p {
+            margin: 0.5rem 0;
+            color: var(--text-muted);
+        }
+
+        .tree-stats strong {
+            color: var(--primary);
+        }
+
+        /* Tree diagram with lines */
+        .tree-diagram {
+            position: relative;
+            padding: 2rem 0;
+        }
+
+        .tree-level {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin: 2rem 0;
+            position: relative;
+        }
+
+        .tree-node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .tree-node-children {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+            position: relative;
+        }
+
+        .tree-connector {
+            position: absolute;
+            background: var(--line-color);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🌳 Släktträff 2026</h1>
+        <p>Gemenskap · Minnen · Framtid</p>
+        <p class="subtitle">Anmäl dig till årets släktträff och utforska vårt släktträd</p>
+    </header>
+
+    <div class="container">
+        <!-- Family Tree Section -->
+        <section id="slakttrad">
+            <h2>Interaktivt Släktträd</h2>
+            
+            <div class="instructions">
+                <h4>Hur du utforskar släktträdet:</h4>
+                <ul>
+                    <li>Klicka på en person för att se mer information</li>
+                    <li>Trädet visar 5 generationer - från de äldsta till den yngsta</li>
+                    <li>Håll musen över en person för att se hover-effekt</li>
+                    <li>Streckade linjer visar familjeförhållanden mellan generationerna</li>
+                </ul>
+            </div>
+
+            <div class="tree-stats">
+                <p><strong>Totalt:</strong> 54 personer i 5 generationer</p>
+                <p>7 grundare → 15 barn → 16 barnbarn → 13 barnbarnsbarn → 3 barnbarnsbarnsbarn</p>
+            </div>
+
+            <div class="family-tree">
+                <!-- Generation 1 - De 7 äldsta -->
+                <div class="generation-row">
+                    <div class="generation-label">Generation 1 - De Äldsta (7 grundare)</div>
+                    <div class="generation-people" id="gen1">
+                        <div class="person-card generation-1" data-person="erik">
+                            <div class="person-name">Erik</div>
+                            <div class="person-role">Grundare</div>
+                        </div>
+                        <div class="person-card generation-1" data-person="gosta">
+                            <div class="person-name">Gösta</div>
+                            <div class="person-role">Grundare</div>
+                        </div>
+                        <div class="person-card generation-1" data-person="gerty">
+                            <div class="person-name">Gerty</div>
+                            <div class="person-role">Grundare</div>
+                        </div>
+                        <div class="person-card generation-1" data-person="nanna">
+                            <div class="person-name">Nanna</div>
+                            <div class="person-role">Grundare</div>
+                        </div>
+                        <div class="person-card generation-1" data-person="stig">
+                            <div class="person-name">Stig</div>
+                            <div class="person-role">Grundare</div>
+                        </div>
+                        <div class="person-card generation-1" data-person="ulla">
+                            <div class="person-name">Ulla</div>
+                            <div class="person-role">Grundare</div>
+                        </div>
+                        <div class="person-card generation-1" data-person="britt">
+                            <div class="person-name">Britt</div>
+                            <div class="person-role">Grundare</div>
+                        </div>
+                        <div class="person-card empty" data-person="tom_gen1">
+                            <div class="person-name"><span class="empty-placeholder">Klicka för namn</span></div>
+                            <div class="person-role">Grundare</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Connector to Generation 2 -->
+                <div class="generation-connector" id="connector-1-2">
+                    <svg class="connector-svg" viewBox="0 0 1400 60" preserveAspectRatio="none">
+                        <!-- Lines will be drawn by JavaScript -->
+                    </svg>
+                </div>
+
+                <!-- Generation 2 - Barnen (grupperade efter förälder) -->
+                <div class="generation-row">
+                    <div class="generation-label">Generation 2 - Barnen (15 barn totalt)</div>
+                    <div class="generation-people" id="gen2">
+                        <!-- Eriks barn (2) -->
+                        <div class="family-group">
+                            <div class="family-group-header">Erik → 2 barn</div>
+                            <div class="family-group-children">
+                                <div class="person-card" data-person="anna">
+                                    <div class="person-name">Anna</div>
+                                    <div class="person-role">Barn till Erik</div>
+                                </div>
+                                <div class="person-card" data-person="magnus">
+                                    <div class="person-name">Magnus</div>
+                                    <div class="person-role">Barn till Erik</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Göstas barn (1) -->
+                        <div class="family-group">
+                            <div class="family-group-header">Gösta → 1 barn</div>
+                            <div class="family-group-children">
+                                <div class="person-card" data-person="lisa">
+                                    <div class="person-name">Lisa</div>
+                                    <div class="person-role">Barn till Gösta</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Gertys barn (2) -->
+                        <div class="family-group">
+                            <div class="family-group-header">Gerty → 2 barn</div>
+                            <div class="family-group-children">
+                                <div class="person-card" data-person="johan">
+                                    <div class="person-name">Johan</div>
+                                    <div class="person-role">Barn till Gerty</div>
+                                </div>
+                                <div class="person-card" data-person="karin">
+                                    <div class="person-name">Karin</div>
+                                    <div class="person-role">Barn till Gerty</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Nannas barn (3): Lars, Lena, Frank -->
+                        <div class="family-group">
+                            <div class="family-group-header">Nanna → 3 barn</div>
+                            <div class="family-group-children">
+                                <div class="person-card" data-person="lars">
+                                    <div class="person-name">Lars</div>
+                                    <div class="person-role">Barn till Nanna</div>
+                                </div>
+                                <div class="person-card" data-person="lena">
+                                    <div class="person-name">Lena</div>
+                                    <div class="person-role">Barn till Nanna</div>
+                                </div>
+                                <div class="person-card" data-person="frank">
+                                    <div class="person-name">Frank</div>
+                                    <div class="person-role">Barn till Nanna</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stigs barn (5) -->
+                        <div class="family-group">
+                            <div class="family-group-header">Stig → 5 barn</div>
+                            <div class="family-group-children">
+                                <div class="person-card" data-person="emma">
+                                    <div class="person-name">Emma</div>
+                                    <div class="person-role">Barn till Stig</div>
+                                </div>
+                                <div class="person-card" data-person="oskar">
+                                    <div class="person-name">Oskar</div>
+                                    <div class="person-role">Barn till Stig</div>
+                                </div>
+                                <div class="person-card" data-person="maja">
+                                    <div class="person-name">Maja</div>
+                                    <div class="person-role">Barn till Stig</div>
+                                </div>
+                                <div class="person-card" data-person="linus">
+                                    <div class="person-name">Linus</div>
+                                    <div class="person-role">Barn till Stig</div>
+                                </div>
+                                <div class="person-card" data-person="elliot">
+                                    <div class="person-name">Elliot</div>
+                                    <div class="person-role">Barn till Stig</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Ullas barn (1) -->
+                        <div class="family-group">
+                            <div class="family-group-header">Ulla → 1 barn</div>
+                            <div class="family-group-children">
+                                <div class="person-card" data-person="alva">
+                                    <div class="person-name">Alva</div>
+                                    <div class="person-role">Barn till Ulla</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Britts barn (1) -->
+                        <div class="family-group">
+                            <div class="family-group-header">Britt → 1 barn</div>
+                            <div class="family-group-children">
+                                <div class="person-card" data-person="felix">
+                                    <div class="person-name">Felix</div>
+                                    <div class="person-role">Barn till Britt</div>
+                                </div>
+                                <div class="person-card empty" data-person="tom_gen2">
+                                    <div class="person-name"><span class="empty-placeholder">Klicka för namn</span></div>
+                                    <div class="person-role">Barn</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Connector to Generation 3 -->
+                <div class="generation-connector" id="connector-2-3">
+                    <svg class="connector-svg" viewBox="0 0 1400 60" preserveAspectRatio="none">
+                        <!-- Lines will be drawn by JavaScript -->
+                    </svg>
+                </div>
+
+                <!-- Generation 3 - Barnbarnen -->
+                <div class="generation-row">
+                    <div class="generation-label">Generation 3 - Barnbarnen (16 barnbarn)</div>
+                    <div class="generation-people" id="gen3">
+                        <!-- LARS BARN (2): Aron, Sandra -->
+                        <div class="sub-family">
+                            <div class="sub-family-header">Lars → 2 barn</div>
+                            <div class="sub-family-children">
+                                <div class="person-card" data-person="aron">
+                                    <div class="person-name">Aron</div>
+                                    <div class="person-role">Barnbarn</div>
+                                </div>
+                                <div class="person-card" data-person="sandra">
+                                    <div class="person-name">Sandra</div>
+                                    <div class="person-role">Barnbarn</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- LENA BARN (2): Elin, Malin -->
+                        <div class="sub-family">
+                            <div class="sub-family-header">Lena → 2 barn</div>
+                            <div class="sub-family-children">
+                                <div class="person-card" data-person="elin">
+                                    <div class="person-name">Elin</div>
+                                    <div class="person-role">Barnbarn</div>
+                                </div>
+                                <div class="person-card" data-person="malin">
+                                    <div class="person-name">Malin</div>
+                                    <div class="person-role">Barnbarn</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FRANK BARN (1): Emelie -->
+                        <div class="sub-family">
+                            <div class="sub-family-header">Frank → 1 barn</div>
+                            <div class="sub-family-children">
+                                <div class="person-card" data-person="emelie">
+                                    <div class="person-name">Emelie</div>
+                                    <div class="person-role">Barnbarn</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Andra barnbarn (13) -->
+                        <div class="person-card" data-person="wilma"><div class="person-name">Wilma</div><div class="person-role">Barnbarn</div></div>
+                        <div class="person-card" data-person="arvid"><div class="person-name">Arvid</div><div class="person-role">Barnbarn</div></div>
+                        <div class="person-card" data-person="sigrid"><div class="person-name">Sigrid</div><div class="person-role">Barnbarn</div></div>
+                        <div class="person-card" data-person="lucas"><div class="person-name">Lucas</div><div class="person-role">Barnbarn</div></div>
+                        <div class="person-card" data-person="astrid"><div class="person-name">Astrid</div><div class="person-role">Barnbarn</div></div>
+                        <div class="person-card" data-person="noah"><div class="person-name">Noah</div><div class="person-role">Barnbarn</div></div>
+                        <div class="person-card" data-person="ingrid"><div class="person-name">Ingrid</div><div class="person-role">Barnbarn</div></div>
+                        <div class="person-card" data-person="freja"><div class="person-name">Freja</div><div class="person-role">Barnbarn</div></div>
+                        <div class="person-card" data-person="elias"><div class="person-name">Elias</div><div class="person-role">Barnbarn</div></div>
+                        <div class="person-card" data-person="ella"><div class="person-name">Ella</div><div class="person-role">Barnbarn</div></div>
+                        <div class="person-card" data-person="axel"><div class="person-name">Axel</div><div class="person-role">Barnbarn</div></div>
+                        <div class="person-card" data-person="lykke"><div class="person-name">Lykke</div><div class="person-role">Barnbarn</div></div>
+                        <div class="person-card" data-person="julius"><div class="person-name">Julius</div><div class="person-role">Barnbarn</div></div>
+                        <div class="person-card" data-person="borgny"><div class="person-name">Borgny</div><div class="person-role">Barnbarn</div></div>
+                        <div class="person-card" data-person="ida"><div class="person-name">Ida</div><div class="person-role">Barnbarn</div></div>
+                        <div class="person-card empty" data-person="tom_gen3">
+                            <div class="person-name"><span class="empty-placeholder">Klicka för namn</span></div>
+                            <div class="person-role">Barnbarn</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Connector to Generation 4 -->
+                <div class="generation-connector" id="connector-3-4">
+                    <svg class="connector-svg" viewBox="0 0 1400 60" preserveAspectRatio="none">
+                        <!-- Lines will be drawn by JavaScript -->
+                    </svg>
+                </div>
+
+                <!-- Generation 4 - Barnbarns barn -->
+                <div class="generation-row">
+                    <div class="generation-label">Generation 4 - Barnbarnsbarn (13)</div>
+                    <div class="generation-people" id="gen4">
+                        <!-- ARON barn (2): Liam, Oliver -->
+                        <div class="sub-family">
+                            <div class="sub-family-header">Aron → 2 barn</div>
+                            <div class="sub-family-children">
+                                <div class="person-card" data-person="liam"><div class="person-name">Liam</div><div class="person-role">Barnbarnsbarn</div></div>
+                                <div class="person-card" data-person="oliver"><div class="person-name">Oliver</div><div class="person-role">Barnbarnsbarn</div></div>
+                            </div>
+                        </div>
+
+                        <!-- SANDRA barn (3): Anny, Mira, Maja -->
+                        <div class="sub-family">
+                            <div class="sub-family-header">Sandra → 3 barn</div>
+                            <div class="sub-family-children">
+                                <div class="person-card" data-person="anny"><div class="person-name">Anny</div><div class="person-role">Barnbarnsbarn</div></div>
+                                <div class="person-card" data-person="mira"><div class="person-name">Mira</div><div class="person-role">Barnbarnsbarn</div></div>
+                                <div class="person-card" data-person="maja_gen4"><div class="person-name">Maja</div><div class="person-role">Barnbarnsbarn</div></div>
+                            </div>
+                        </div>
+
+                        <!-- MALINS barn (3): Amelia, Emmy, Anton -->
+                        <div class="sub-family">
+                            <div class="sub-family-header">Malin → 3 barn</div>
+                            <div class="sub-family-children">
+                                <div class="person-card" data-person="amelia"><div class="person-name">Amelia</div><div class="person-role">Barnbarnsbarn</div></div>
+                                <div class="person-card" data-person="emmy"><div class="person-name">Emmy</div><div class="person-role">Barnbarnsbarn</div></div>
+                                <div class="person-card" data-person="anton"><div class="person-name">Anton</div><div class="person-role">Barnbarnsbarn</div></div>
+                            </div>
+                        </div>
+
+                        <!-- ELINS barn (2): Noa, Freja -->
+                        <div class="sub-family">
+                            <div class="sub-family-header">Elin → 2 barn</div>
+                            <div class="sub-family-children">
+                                <div class="person-card" data-person="noa"><div class="person-name">Noa</div><div class="person-role">Barnbarnsbarn</div></div>
+                                <div class="person-card" data-person="freja_gen4"><div class="person-name">Freja</div><div class="person-role">Barnbarnsbarn</div></div>
+                            </div>
+                        </div>
+
+                        <!-- Andra barnbarnsbarn (3) -->
+                        <div class="person-card" data-person="ludvig"><div class="person-name">Ludvig</div><div class="person-role">Barnbarnsbarn</div></div>
+                        <div class="person-card" data-person="signe"><div class="person-name">Signe</div><div class="person-role">Barnbarnsbarn</div></div>
+                        <div class="person-card" data-person="ragnar"><div class="person-name">Ragnar</div><div class="person-role">Barnbarnsbarn</div></div>
+                        <div class="person-card" data-person="hilma"><div class="person-name">Hilma</div><div class="person-role">Barnbarnsbarn</div></div>
+                        <div class="person-card" data-person="ingvar"><div class="person-name">Ingvar</div><div class="person-role">Barnbarnsbarn</div></div>
+                        <div class="person-card" data-person="marianne"><div class="person-name">Marianne</div><div class="person-role">Barnbarnsbarn</div></div>
+                        <div class="person-card" data-person="bo"><div class="person-name">Bo</div><div class="person-role">Barnbarnsbarn</div></div>
+                        <div class="person-card empty" data-person="tom_gen4">
+                            <div class="person-name"><span class="empty-placeholder">Klicka för namn</span></div>
+                            <div class="person-role">Barnbarnsbarn</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Connector to Generation 5 -->
+                <div class="generation-connector" id="connector-4-5">
+                    <svg class="connector-svg" viewBox="0 0 1400 60" preserveAspectRatio="none">
+                        <!-- Lines will be drawn by JavaScript -->
+                    </svg>
+                </div>
+
+                <!-- Generation 5 - Barnbarnsbarnsbarn -->
+                <div class="generation-row">
+                    <div class="generation-label">Generation 5 - Barnbarnsbarnsbarn (3)</div>
+                    <div class="generation-people" id="gen5">
+                        <div class="person-card" data-person="alice"><div class="person-name">Alice</div><div class="person-role">Barnbarnsbarnsbarn</div></div>
+                        <div class="person-card" data-person="nils"><div class="person-name">Nils</div><div class="person-role">Barnbarnsbarnsbarn</div></div>
+                        <div class="person-card" data-person="stina"><div class="person-name">Stina</div><div class="person-role">Barnbarnsbarnsbarn</div></div>
+                        <div class="person-card empty" data-person="tom_gen5">
+                            <div class="person-name"><span class="empty-placeholder">Klicka för namn</span></div>
+                            <div class="person-role">Barnbarnsbarnsbarn</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Registration Form Section -->
+        <section id="anmalan">
+            <h2>Anmälan till Släktträffen</h2>
+            
+            <div id="form-container">
+                <form id="registration-form">
+                    <div class="form-group">
+                        <label for="name">Ditt Namn *</label>
+                        <input type="text" id="name" name="name" required placeholder="Förnamn och efternamn">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">E-postadress *</label>
+                        <input type="email" id="email" name="email" required placeholder="din@email.se">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Vilka generationer tillhör du? *</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="gen1-check" name="generations" value="1">
+                                <label for="gen1-check">Generation 1</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="gen2-check" name="generations" value="2">
+                                <label for="gen2-check">Generation 2</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="gen3-check" name="generations" value="3">
+                                <label for="gen3-check">Generation 3</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="gen4-check" name="generations" value="4">
+                                <label for="gen4-check">Generation 4</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="gen5-check" name="generations" value="5">
+                                <label for="gen5-check">Generation 5</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="group-size">Antal deltagare i din grupp *</label>
+                        <select id="group-size" name="group-size" required>
+                            <option value="">Välj antal...</option>
+                            <option value="1">1 person (jag ensam)</option>
+                            <option value="2">2 personer</option>
+                            <option value="3">3 personer</option>
+                            <option value="4">4 personer</option>
+                            <option value="5">5 personer</option>
+                            <option value="6+">6+ personer</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="notes">Allergier, kostpreferenser eller önskemål</label>
+                        <textarea id="notes" name="notes" placeholder="T.ex. glutenfri, vegetarian, allergier, särskilda önskemål..."></textarea>
+                    </div>
+
+                    <button type="submit" class="submit-btn">Skicka Anmälan</button>
+                </form>
+            </div>
+
+            <div id="success-message" class="success-message">
+                <h3>✅ Tack för din anmälan!</h3>
+                <p>Din anmälan har mottagits. Vi ser fram emot att träffa dig på släktträffen!</p>
+                <p style="margin-top: 1rem; font-size: 0.95rem;">En bekräftelse har skickats till din e-postadress.</p>
+                <button onclick="resetForm()" class="submit-btn" style="margin-top: 1.5rem; background: white; color: var(--success);">Skicka en ny anmälan</button>
+            </div>
+        </section>
+    </div>
+
+    <!-- Modal for person info -->
+    <div class="modal" id="person-modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <h3 id="modal-name">Personnamn</h3>
+            <div class="modal-info">
+                <p><strong>Generation:</strong> <span id="modal-generation"></span></p>
+                <p><strong>Roll:</strong> <span id="modal-role"></span></p>
+                <p><strong>Familjeförhållande:</strong> <span id="modal-relation"></span></p>
+            </div>
+            <p id="modal-description" style="color: var(--text-muted); font-style: italic;"></p>
+        </div>
+    </div>
+
+    <script>
+        // Load saved names from localStorage
+        function loadSavedNames() {
+            const saved = localStorage.getItem('slakttraff_names');
+            if (saved) {
+                const names = JSON.parse(saved);
+                Object.keys(names).forEach(personId => {
+                    if (personData[personId]) {
+                        personData[personId].name = names[personId].name;
+                        personData[personId].birthYear = names[personId].birthYear;
+                        personData[personId].isCustom = true;
+                    }
+                });
+                updateTreeDisplay();
+            }
+        }
+
+        // Save name to localStorage
+        function saveNameToStorage(personId, name, birthYear) {
+            const saved = localStorage.getItem('slakttraff_names');
+            const names = saved ? JSON.parse(saved) : {};
+            names[personId] = { name, birthYear };
+            localStorage.setItem('slakttraff_names', JSON.stringify(names));
+        }
+
+        // Show name input modal
+        function openNameInputModal(personId) {
+            document.getElementById('current-person-id').value = personId;
+            document.getElementById('person-name-input').value = '';
+            document.getElementById('person-birth-year').value = '';
+            document.getElementById('name-input-modal').classList.add('active');
+        }
+
+        // Close name input modal
+        function closeNameInputModal() {
+            document.getElementById('name-input-modal').classList.remove('active');
+        }
+
+        // Save name from form
+        function saveName(event) {
+            event.preventDefault();
+            const personId = document.getElementById('current-person-id').value;
+            const name = document.getElementById('person-name-input').value.trim();
+            const birthYear = document.getElementById('person-birth-year').value;
+
+            if (!name) {
+                alert('Vänligen skriv ett namn!');
+                return;
+            }
+
+            if (personData[personId]) {
+                personData[personId].name = name;
+                personData[personId].birthYear = birthYear || null;
+                personData[personId].isCustom = true;
+                
+                saveNameToStorage(personId, name, birthYear);
+                
+                closeNameInputModal();
+                updateTreeDisplay();
+                
+                alert('Namnet "' + name + '" har sparats!');
+            }
+        }
+
+        // Update tree display to show/hide empty boxes
+        function updateTreeDisplay() {
+            document.querySelectorAll('.person-card').forEach(card => {
+                const personId = card.getAttribute('data-person');
+                const person = personData[personId];
+                if (person) {
+                    if (!person.name || person.name === '') {
+                        card.classList.add('empty');
+                        const nameDiv = card.querySelector('.person-name');
+                        if (nameDiv) {
+                            nameDiv.innerHTML = '<span class="empty-placeholder">Klicka för att skriva namn</span>';
+                        }
+                    } else {
+                        card.classList.remove('empty');
+                        const nameDiv = card.querySelector('.person-name');
+                        if (nameDiv) {
+                            nameDiv.textContent = person.name;
+                        }
+                    }
+                }
+            });
+        }
+
+
+        // Person data - UPPDATERAD med rätt struktur
+        const personData = {
+            // Generation 1
+            erik: { name: "Erik", generation: 1, role: "Grundare", relation: "Familiens äldste", description: "Släktens grundare. Har 2 barn." },
+            gosta: { name: "Gösta", generation: 1, role: "Grundare", relation: "Familiens äldste", description: "En av de sju grundarna. Har 1 barn." },
+            gerty: { name: "Gerty", generation: 1, role: "Grundare", relation: "Familiens äldste", description: "En av de sju grundarna. Har 2 barn." },
+            nanna: { name: "Nanna", generation: 1, role: "Grundare", relation: "Familiens äldste", description: "En av de sju grundarna. Har 3 barn: Lars, Lena och Frank." },
+            stig: { name: "Stig", generation: 1, role: "Grundare", relation: "Familiens äldste", description: "En av de sju grundarna. Har 5 barn." },
+            ulla: { name: "Ulla", generation: 1, role: "Grundare", relation: "Familiens äldste", description: "En av de sju grundarna. Har 1 barn." },
+            britt: { name: "Britt", generation: 1, role: "Grundare", relation: "Familiens äldste", description: "En av de sju grundarna. Har 1 barn." },
+            
+            // Generation 2 - Eriks barn
+            anna: { name: "Anna", generation: 2, role: "Barn", relation: "Barn till Erik", description: "Äldsta barnet till Erik." },
+            magnus: { name: "Magnus", generation: 2, role: "Barn", relation: "Barn till Erik", description: "Andra barnet till Erik." },
+            
+            // Göstas barn
+            lisa: { name: "Lisa", generation: 2, role: "Barn", relation: "Barn till Gösta", description: "Endaste barnet till Gösta." },
+            
+            // Gertys barn
+            johan: { name: "Johan", generation: 2, role: "Barn", relation: "Barn till Gerty", description: "Äldsta barnet till Gerty." },
+            karin: { name: "Karin", generation: 2, role: "Barn", relation: "Barn till Gerty", description: "Andra barnet till Gerty." },
+            
+            // Nannas barn
+            lars: { name: "Lars", generation: 2, role: "Barn", relation: "Barn till Nanna", description: "Äldsta barnet till Nanna. Har 2 barn: Aron och Sandra." },
+            lena: { name: "Lena", generation: 2, role: "Barn", relation: "Barn till Nanna", description: "Mellankind till Nanna. Har 2 barn: Elin och Malin." },
+            frank: { name: "Frank", generation: 2, role: "Barn", relation: "Barn till Nanna", description: "Yngsta barnet till Nanna. Har 1 barn: Emelie." },
+            
+            // Stigs barn
+            emma: { name: "Emma", generation: 2, role: "Barn", relation: "Barn till Stig", description: "Äldsta barnet till Stig." },
+            oskar: { name: "Oskar", generation: 2, role: "Barn", relation: "Barn till Stig", description: "Andra barnet till Stig." },
+            maja: { name: "Maja", generation: 2, role: "Barn", relation: "Barn till Stig", description: "Tredje barnet till Stig." },
+            linus: { name: "Linus", generation: 2, role: "Barn", relation: "Barn till Stig", description: "Fjärde barnet till Stig." },
+            elliot: { name: "Elliot", generation: 2, role: "Barn", relation: "Barn till Stig", description: "Yngsta barnet till Stig." },
+            
+            // Ullas barn
+            alva: { name: "Alva", generation: 2, role: "Barn", relation: "Barn till Ulla", description: "Endaste barnet till Ulla." },
+            
+            // Britts barn
+            felix: { name: "Felix", generation: 2, role: "Barn", relation: "Barn till Britt", description: "Endaste barnet till Britt." },
+            
+            // Generation 3 - LARS barn
+            aron: { name: "Aron", generation: 3, role: "Barnbarn", relation: "Barn till Lars", description: "Äldsta barnet till Lars." },
+            sandra: { name: "Sandra", generation: 3, role: "Barnbarn", relation: "Barn till Lars", description: "Andra barnet till Lars." },
+            
+            // LENA barn
+            elin: { name: "Elin", generation: 3, role: "Barnbarn", relation: "Barn till Lena", description: "Äldsta barnet till Lena. Har 2 barn: Noa och Freja." },
+            malin: { name: "Malin", generation: 3, role: "Barnbarn", relation: "Barn till Lena", description: "Andra barnet till Lena. Har 3 barn: Amelia, Emmy och Anton." },
+            
+            // FRANK barn
+            emelie: { name: "Emelie", generation: 3, role: "Barnbarn", relation: "Barn till Frank", description: "Endaste barnet till Frank." },
+            
+            // Andra barnbarn
+            wilma: { name: "Wilma", generation: 3, role: "Barnbarn", relation: "Barnbarn", description: "Barnbarn i släkten." },
+            arvid: { name: "Arvid", generation: 3, role: "Barnbarn", relation: "Barnbarn", description: "Barnbarn i släkten." },
+            sigrid: { name: "Sigrid", generation: 3, role: "Barnbarn", relation: "Barnbarn", description: "Barnbarn i släkten." },
+            lucas: { name: "Lucas", generation: 3, role: "Barnbarn", relation: "Barnbarn", description: "Barnbarn i släkten." },
+            astrid: { name: "Astrid", generation: 3, role: "Barnbarn", relation: "Barnbarn", description: "Barnbarn i släkten." },
+            noah: { name: "Noah", generation: 3, role: "Barnbarn", relation: "Barnbarn", description: "Barnbarn i släkten." },
+            ingrid: { name: "Ingrid", generation: 3, role: "Barnbarn", relation: "Barnbarn", description: "Barnbarn i släkten." },
+            freja: { name: "Freja", generation: 3, role: "Barnbarn", relation: "Barnbarn", description: "Barnbarn i släkten." },
+            elias: { name: "Elias", generation: 3, role: "Barnbarn", relation: "Barnbarn", description: "Barnbarn i släkten." },
+            ella: { name: "Ella", generation: 3, role: "Barnbarn", relation: "Barnbarn", description: "Barnbarn i släkten." },
+            axel: { name: "Axel", generation: 3, role: "Barnbarn", relation: "Barnbarn", description: "Barnbarn i släkten." },
+            lykke: { name: "Lykke", generation: 3, role: "Barnbarn", relation: "Barnbarn", description: "Barnbarn i släkten." },
+            julius: { name: "Julius", generation: 3, role: "Barnbarn", relation: "Barnbarn", description: "Barnbarn i släkten." },
+            borgny: { name: "Borgny", generation: 3, role: "Barnbarn", relation: "Barnbarn", description: "Barnbarn i släkten." },
+            ida: { name: "Ida", generation: 3, role: "Barnbarn", relation: "Barnbarn", description: "Barnbarn i släkten." },
+            
+            // Generation 4 - ARON barn
+            liam: { name: "Liam", generation: 4, role: "Barnbarnsbarn", relation: "Barn till Aron", description: "Äldsta barnet till Aron." },
+            oliver: { name: "Oliver", generation: 4, role: "Barnbarnsbarn", relation: "Barn till Aron", description: "Andra barnet till Aron." },
+            
+            // SANDRA barn
+            anny: { name: "Anny", generation: 4, role: "Barnbarnsbarn", relation: "Barn till Sandra", description: "Äldsta barnet till Sandra." },
+            mira: { name: "Mira", generation: 4, role: "Barnbarnsbarn", relation: "Barn till Sandra", description: "Mellankind till Sandra." },
+            maja_gen4: { name: "Maja", generation: 4, role: "Barnbarnsbarn", relation: "Barn till Sandra", description: "Yngsta barnet till Sandra." },
+            
+            // ELINS barn
+            noa: { name: "Noa", generation: 4, role: "Barnbarnsbarn", relation: "Barn till Elin", description: "Äldsta barnet till Elin." },
+            freja_gen4: { name: "Freja", generation: 4, role: "Barnbarnsbarn", relation: "Barn till Elin", description: "Andra barnet till Elin." },
+            
+            // MALINS barn
+            amelia: { name: "Amelia", generation: 4, role: "Barnbarnsbarn", relation: "Barn till Malin", description: "Äldsta barnet till Malin." },
+            emmy: { name: "Emmy", generation: 4, role: "Barnbarnsbarn", relation: "Barn till Malin", description: "Andra barnet till Malin." },
+            anton: { name: "Anton", generation: 4, role: "Barnbarnsbarn", relation: "Barn till Malin", description: "Tredje barnet till Malin." },
+            
+            // Andra barnbarnsbarn
+            ludvig: { name: "Ludvig", generation: 4, role: "Barnbarnsbarn", relation: "Barnbarnsbarn", description: "Barnbarnsbarn i släkten." },
+            signe: { name: "Signe", generation: 4, role: "Barnbarnsbarn", relation: "Barnbarnsbarn", description: "Barnbarnsbarn i släkten." },
+            ragnar: { name: "Ragnar", generation: 4, role: "Barnbarnsbarn", relation: "Barnbarnsbarn", description: "Barnbarnsbarn i släkten." },
+            hilma: { name: "Hilma", generation: 4, role: "Barnbarnsbarn", relation: "Barnbarnsbarn", description: "Barnbarnsbarn i släkten." },
+            ingvar: { name: "Ingvar", generation: 4, role: "Barnbarnsbarn", relation: "Barnbarnsbarn", description: "Barnbarnsbarn i släkten." },
+            marianne: { name: "Marianne", generation: 4, role: "Barnbarnsbarn", relation: "Barnbarnsbarn", description: "Barnbarnsbarn i släkten." },
+            bo: { name: "Bo", generation: 4, role: "Barnbarnsbarn", relation: "Barnbarnsbarn", description: "Barnbarnsbarn i släkten." },
+            
+            // Generation 5
+            alice: { name: "Alice", generation: 5, role: "Barnbarnsbarnsbarn", relation: "Barnbarnsbarnsbarn", description: "Yngsta generationen i släkten." },
+            nils: { name: "Nils", generation: 5, role: "Barnbarnsbarnsbarn", relation: "Barnbarnsbarnsbarn", description: "Yngsta generationen i släkten." },
+
+            // Tomma rutor - klicka för att skriva ditt namn!
+            tom_gen1: { name: "", generation: 1, role: "Grundare", relation: "Familiens äldste", description: "Klicka här för att skriva ditt namn!" },
+            tom_gen2: { name: "", generation: 2, role: "Barn", relation: "Barn till grundare", description: "Klicka här för att skriva ditt namn!" },
+            tom_gen3: { name: "", generation: 3, role: "Barnbarn", relation: "Barnbarn", description: "Klicka här för att skriva ditt namn!" },
+            tom_gen4: { name: "", generation: 4, role: "Barnbarnsbarn", relation: "Barnbarnsbarn", description: "Klicka här för att skriva ditt namn!" },
+            tom_gen5: { name: "", generation: 5, role: "Barnbarnsbarnsbarn", relation: "Barnbarnsbarnsbarn", description: "Klicka här för att skriva ditt namn!" },
+        };
+
+
+        // Modal functions
+        const modal = document.getElementById('person-modal');
+
+        // Updated click handler to check for empty names
+        document.querySelectorAll('.person-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const personId = this.getAttribute('data-person');
+                const person = personData[personId];
+                
+                if (person) {
+                    // If name is empty, show name input modal
+                    if (!person.name || person.name === '' || person.name === 'Namn saknas') {
+                        openNameInputModal(personId);
+                    } else {
+                        // Show person info modal
+                        document.getElementById('modal-name').textContent = person.name;
+                        document.getElementById('modal-generation').textContent = `Generation ${person.generation}`;
+                        document.getElementById('modal-role').textContent = person.role;
+                        document.getElementById('modal-relation').textContent = person.relation;
+                        document.getElementById('modal-description').textContent = person.description;
+                        
+                        modal.classList.add('active');
+                    }
+                }
+            });
+        });
+
+        function closeModal() {
+            modal.classList.remove('active');
+        }
+
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modal.classList.contains('active')) {
+                closeModal();
+            }
+        });
+
+        // Form handling
+        const form = document.getElementById('registration-form');
+        const formContainer = document.getElementById('form-container');
+        const successMessage = document.getElementById('success-message');
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form data
+            const formData = new FormData(form);
+            const generations = formData.getAll('generations');
+            
+            if (generations.length === 0) {
+                alert('Vänligen välj minst en generation du tillhör.');
+                return;
+            }
+
+            // Simulate form submission
+            const submitBtn = form.querySelector('.submit-btn');
+            submitBtn.textContent = 'Skickar...';
+            submitBtn.disabled = true;
+
+            setTimeout(() => {
+                formContainer.style.display = 'none';
+                successMessage.classList.add('active');
+                
+                // Scroll to success message
+                successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 1500);
+        });
+
+        function resetForm() {
+            form.reset();
+            successMessage.classList.remove('active');
+            formContainer.style.display = 'block';
+            
+            const submitBtn = form.querySelector('.submit-btn');
+            submitBtn.textContent = 'Skicka Anmälan';
+            submitBtn.disabled = false;
+        }
+
+        // Draw connector lines between generations
+        function drawConnectorLines() {
+            // This function would draw SVG lines between family members
+            // For now, we use CSS dashed borders to show relationships
+            console.log('Connector lines ready to be drawn');
+        }
+
+        // Draw lines after page loads
+        window.addEventListener('load', drawConnectorLines);
+
+        // Smooth scroll for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    </script>
+
+    <!-- Name Input Modal -->
+    <div class="modal" id="name-input-modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeNameInputModal()">&times;</button>
+            <h3>Skriv in ditt namn</h3>
+            <div class="modal-info">
+                <p>Du har klickat på en tom plats i släktträdet. Skriv ditt namn så sparas det!</p>
+            </div>
+            <form id="name-input-form" onsubmit="saveName(event)">
+                <div class="form-group">
+                    <label for="person-name-input">Ditt namn *</label>
+                    <input type="text" id="person-name-input" name="name" required 
+                           placeholder="T.ex. Anders Andersson">
+                </div>
+                <div class="form-group">
+                    <label for="person-birth-year">Födelseår (valfritt)</label>
+                    <input type="number" id="person-birth-year" name="birthYear" 
+                           placeholder="1980" min="1900" max="2026">
+                </div>
+                <input type="hidden" id="current-person-id" name="personId">
+                <button type="submit" class="submit-btn">Spara namn</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
