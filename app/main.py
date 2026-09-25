@@ -1,14 +1,18 @@
 """FastAPI application for Släktträff 2026."""
 import os
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.database import Base, engine
 from app.routers import persons, registrations
+from app.seed import seed_persons_if_empty
 
-# Create database tables
+# Create database tables and seed the family tree on a fresh database.
 Base.metadata.create_all(bind=engine)
+seed_persons_if_empty()
 
 app = FastAPI(
     title="Släktträff 2026 API",
@@ -36,6 +40,7 @@ def health_check():
     return {"status": "ok", "app": "Släktträff 2026"}
 
 
-@app.get("/")
-def root():
-    return {"message": "Welcome to Släktträff 2026 API"}
+# Serve the frontend (teddy/) from the same origin: GET / serves the tree page.
+# Mounted last so /api/* and /health keep precedence.
+_TEDDY_DIR = Path(__file__).resolve().parent.parent / "teddy"
+app.mount("/", StaticFiles(directory=_TEDDY_DIR, html=True), name="teddy")

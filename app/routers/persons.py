@@ -73,12 +73,10 @@ def delete_person(person_id: int, db: Session = Depends(get_db)):
 
 @router.post("/{person_id}/rsvp", response_model=PersonResponse)
 def submit_rsvp(person_id: int, rsvp: RsvpSubmit, db: Session = Depends(get_db)):
-    """Accept or decline the invitation. The per-person token identifies the caller."""
+    """Accept or decline the invitation. Open click-and-answer: no token required."""
     db_person = db.query(Person).filter(Person.id == person_id).first()
     if db_person is None:
         raise HTTPException(status_code=404, detail="Person not found")
-    if not db_person.rsvp_token or not secrets.compare_digest(rsvp.token, db_person.rsvp_token):
-        raise HTTPException(status_code=403, detail="Invalid RSVP token")
     if rsvp.status == RsvpStatus.PENDING:
         raise HTTPException(status_code=422, detail="RSVP must be accepted or declined")
 

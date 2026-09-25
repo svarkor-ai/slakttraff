@@ -102,46 +102,65 @@ def test_person_get_unknown_returns_404():
     assert client.get("/api/persons/99999").status_code == 404
 
 
-# --- RSVP ---
+# --- RSVP (open click-and-answer: no token required) ---
 
-def test_rsvp_accept_turns_status_accepted():
+def test_rsvp_accept_without_token():
     pid = client.post("/api/persons/", json=_person_payload()).json()["id"]
-    # token is per-person and not exposed; fetch it from the DB via the app session
-    from app.database import SessionLocal
-    from app.models.person import Person
-    db = SessionLocal()
-    token = db.query(Person).filter(Person.id == pid).first().rsvp_token
-    db.close()
-
-    r = client.post(f"/api/persons/{pid}/rsvp", json={"token": token, "status": "accepted"})
+    r = client.post(f"/api/persons/{pid}/rsvp", json={"status": "accepted"})
     assert r.status_code == 200
     assert r.json()["rsvp_status"] == "accepted"
 
-    r2 = client.post(f"/api/persons/{pid}/rsvp", json={"token": token, "status": "declined"})
+    r2 = client.post(f"/api/persons/{pid}/rsvp", json={"status": "declined"})
     assert r2.status_code == 200
     assert r2.json()["rsvp_status"] == "declined"
 
 
-def test_rsvp_rejects_wrong_token():
-    pid = client.post("/api/persons/", json=_person_payload()).json()["id"]
-    r = client.post(f"/api/persons/{pid}/rsvp", json={"token": "x" * 24, "status": "accepted"})
-    assert r.status_code == 403
-
-
 def test_rsvp_rejects_pending():
     pid = client.post("/api/persons/", json=_person_payload()).json()["id"]
-    from app.database import SessionLocal
-    from app.models.person import Person
-    db = SessionLocal()
-    token = db.query(Person).filter(Person.id == pid).first().rsvp_token
-    db.close()
-    r = client.post(f"/api/persons/{pid}/rsvp", json={"token": token, "status": "pending"})
+    r = client.post(f"/api/persons/{pid}/rsvp", json={"status": "pending"})
+    assert r.status_code == 422
+
+
+def test_rsvp_rejects_invalid_status():
+    pid = client.post("/api/persons/", json=_person_payload()).json()["id"]
+    r = client.post(f"/api/persons/{pid}/rsvp", json={"status": "maybe"})
+    assert r.status_code == 422
+
+
+def test_rsvp_rejects_missing_status():
+    pid = client.post("/api/persons/", json=_person_payload()).json()["id"]
+    r = client.post(f"/api/persons/{pid}/rsvp", json={})
     assert r.status_code == 422
 
 
 def test_rsvp_unknown_person_404():
-    r = client.post("/api/persons/99999/rsvp", json={"token": "x" * 24, "status": "accepted"})
+    r = client.post("/api/persons/99999/rsvp", json={"status": "accepted"})
     assert r.status_code == 404
+
+
+def test_person_list_includes_rsvp_status():
+    pid = client.post("/api/persons/", json=_person_payload(name="Status Test")).json()["id"]
+    client.post(f"/api/persons/{pid}/rsvp", json={"status": "accepted"})
+    r = client.get("/api/persons/")
+    assert r.status_code == 200
+    match = [p for p in r.json() if p["id"] == pid]
+    assert match and match[0]["rsvp_status"] == "accepted"
+
+
+# --- frontend serving (one origin) ---
+
+def test_root_serves_tree_page():
+    r = client.get("/")
+    assert r.status_code == 200
+    assert "text/html" in r.headers["content-type"]
+    assert "Släktträff 2026" in r.text
+    assert "/api.js" in r.text and "/tree.js" in r.text
+
+
+def test_static_assets_served():
+    for path in ("/style.css", "/tree.css", "/forms.css", "/api.js", "/tree.js", "/app.js"):
+        r = client.get(path)
+        assert r.status_code == 200, path
 
 
 # --- registrations ---

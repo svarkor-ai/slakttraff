@@ -78,7 +78,6 @@ class PersonResponse(Person):
 
 
 class RsvpSubmit(BaseModel):
-    """Input schema for the RSVP endpoint (token identifies the person)."""
+    """Input schema for the RSVP endpoint (open click-and-answer, no token)."""
 
-    token: str = Field(..., min_length=8, max_length=128, description="Per-person RSVP token")
     status: RsvpStatus = Field(..., description="accepted or declined")

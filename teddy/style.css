@@ -1,0 +1,332 @@
+/* Släktträff 2026 — base layout, header, sections, modal, form.
+   Tree-specific styles live in tree.css. */
+
+:root {
+    --primary: #8B4513;
+    --primary-light: #A0522D;
+    --primary-dark: #654321;
+    --accent: #D2691E;
+    --cream: #F5F1E8;
+    --warm-white: #FAF8F5;
+    --text-dark: #2C1810;
+    --text-muted: #5C4033;
+    --border: #D4C4B0;
+    --success: #228B22;
+    --danger: #B22222;
+    --shadow: rgba(139, 69, 19, 0.15);
+    --line-color: #8B4513;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Georgia', 'Palatino', serif;
+    background: linear-gradient(180deg, var(--cream) 0%, var(--warm-white) 100%);
+    color: var(--text-dark);
+    line-height: 1.6;
+}
+
+/* Header */
+header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    padding: 3rem 1.5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5 L35 25 L55 25 L38 38 L45 58 L30 45 L15 58 L22 38 L5 25 L25 25 Z' fill='rgba(255,255,255,0.05)'/%3E%3C/svg%3E");
+    opacity: 0.3;
+}
+
+header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    position: relative;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+}
+
+header p {
+    font-size: 1.2rem;
+    opacity: 0.95;
+    position: relative;
+}
+
+.subtitle {
+    font-style: italic;
+    margin-top: 0.5rem;
+    opacity: 0.9;
+    position: relative;
+}
+
+/* Container */
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+/* Section styling */
+section {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 20px var(--shadow);
+}
+
+section h2 {
+    color: var(--primary);
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 3px solid var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+section h2::before {
+    content: '🌳';
+    font-size: 1.4rem;
+}
+
+/* API error banner */
+.api-error {
+    display: none;
+    background: #fdecea;
+    border: 2px solid var(--danger);
+    color: var(--danger);
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    font-weight: bold;
+}
+
+.api-error.active {
+    display: block;
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 450px;
+    width: 100%;
+    position: relative;
+    animation: modalSlide 0.3s ease;
+}
+
+@keyframes modalSlide {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-muted);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.modal-close:hover {
+    background: var(--cream);
+}
+
+.modal h3 {
+    color: var(--primary);
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.modal-info {
+    background: var(--cream);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.modal-info p {
+    margin: 0.5rem 0;
+}
+
+.modal-info strong {
+    color: var(--primary-dark);
+}
+
+/* RSVP buttons in the person modal */
+.rsvp-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.rsvp-btn {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    font-weight: bold;
+    font-family: inherit;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: white;
+}
+
+.rsvp-btn.accept {
+    background: var(--success);
+}
+
+.rsvp-btn.accept:hover {
+    background: #1c6b1c;
+}
+
+.rsvp-btn.decline {
+    background: var(--danger);
+}
+
+.rsvp-btn.decline:hover {
+    background: #8f1b1b;
+}
+
+.rsvp-btn:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.rsvp-status-line {
+    margin-top: 0.75rem;
+    font-style: italic;
+    color: var(--text-muted);
+}
+
+/* Instructions and stats */
+.instructions {
+    background: var(--cream);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid var(--accent);
+}
+
+.instructions h4 {
+    color: var(--primary-dark);
+    margin-bottom: 0.5rem;
+}
+
+.instructions ul {
+    margin-left: 1.5rem;
+    color: var(--text-muted);
+}
+
+.instructions li {
+    margin: 0.25rem 0;
+}
+
+.tree-stats {
+    background: var(--warm-white);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.tree-stats p {
+    margin: 0.5rem 0;
+    color: var(--text-muted);
+}
+
+.tree-stats strong {
+    color: var(--primary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 1.8rem;
+    }
+
+    header p {
+        font-size: 1rem;
+    }
+
+    section {
+        padding: 1.5rem;
+    }
+
+    section h2 {
+        font-size: 1.4rem;
+    }
+
+    .checkbox-group {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    header {
+        padding: 2rem 1rem;
+    }
+
+    header h1 {
+        font-size: 1.5rem;
+    }
+
+    .container {
+        padding: 1rem 0.5rem;
+    }
+
+    section {
+        padding: 1rem;
+    }
+}
