@@ -82,3 +82,56 @@ File hygiene: all new/changed source files ≤ 400 lines (largest: tests 319, al
 - Session tokens are in-memory: server restart logs everyone out (documented in
   docs/ARCHITECTURE.md).
 - validate-hosting.py absent — run the real validator when it is available.
+
+## Fix round 1 (DA verdict)
+
+Fixes applied for the adversarial review at
+`.audits/202609261055-00c5110e/DA-verdict.md` (commits c254164 + 219b12e):
+
+- **P1-1** — sleep-based throttle replaced with a per-IP sliding-window failure
+  counter (max 5 failures / 60 s, advanced atomically under a lock); tripped
+  limit answers 429, correct passwords are never throttled.
+- **P1-2** — both sides of the `hmac.compare_digest` comparison are UTF-8
+  encoded; any input now yields 403, never 500.
+- **P1-3 (owner decision)** — default password "sibbamala" kept as accepted;
+  `SITE_PASSWORD` env override works and is documented in docs/ARCHITECTURE.md.
+- **P1-4** — new `ADMIN_PASSWORD` env (no default). When unset, admin endpoints
+  return 404. `GET /api/rsvp-replies` and registration GET/PUT/DELETE now need
+  an admin token (separate store, `POST /api/admin/auth`).
+- **P1-5** — person POST/PUT/DELETE gated behind the admin token; site password
+  remains enough for GET tree data and the RSVP endpoint.
+- **P2 duplicate replies** — RSVP is an upsert: one RsvpReply row per person,
+  repeat submits update the existing row.
+- **P2 session restart** — frontend already returns to the password screen on
+  401 (teddy/api.js `_request` clears the token); documented in
+  docs/ARCHITECTURE.md.
+- **P3** — `/docs`, `/redoc`, `/openapi.json` disabled unless `SLAKTTRAFF_DEBUG=1`.
+
+Verification (executed this session):
+
+```
+$ .venv/bin/python -m pytest tests/ -q
+38 passed, 4 warnings in 1.80s
+
+$ # 20 parallel wrong-password POSTs (xargs -P 20):
+      5 403
+     15 429
+wall: .113s
+$ # correct password after the failures:
+200
+
+Live journey (fresh DB, server.py on port 8179, curl):
+GET /health                          → {"status":"ok","app":"Släktträff 2026"}
+GET /docs, /openapi.json             → 404 404 (debug off)
+POST /api/auth wrong pw              → 403
+POST /api/auth "lösenåä"             → 403 (was 500)
+POST /api/auth correct pw            → 200, token len 64
+GET  /api/persons/ (site token)      → 200, tree JSON
+GET  /api/rsvp-replies (site token)  → 404 (ADMIN_PASSWORD unset) / 401 (set)
+DELETE /api/persons/1 (site token)   → 404/401 (admin-only now)
+POST /api/persons/1/rsvp ×2          → 200; DB has ONE rsvp_replies row for
+                                       person 1: (1,1,'declined','gast2@example.se')
+POST /api/admin/auth (unset)         → 404
+POST /api/admin/auth (set)           → 200, admin token reads rsvp-replies,
+                                       admin DELETE person → 200
+```
