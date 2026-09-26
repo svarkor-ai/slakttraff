@@ -40,7 +40,7 @@ const API = {
     },
 
     async login(password) {
-        const res = await fetch('/api/auth', {
+        const res = await fetch('api/auth', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ password: password }),
@@ -57,7 +57,7 @@ const API = {
     },
 
     async fetchPersons() {
-        const res = await this._request('/api/persons/', { headers: this._headers() });
+        const res = await this._request('api/persons/', { headers: this._headers() });
         if (!res.ok) {
             throw new Error('Kunde inte hämta släktträdet (HTTP ' + res.status + ')');
         }
@@ -65,7 +65,7 @@ const API = {
     },
 
     async submitRsvp(personId, status, contact) {
-        const res = await this._request('/api/persons/' + personId + '/rsvp', {
+        const res = await this._request('api/persons/' + personId + '/rsvp', {
             method: 'POST',
             headers: this._headers(),
             body: JSON.stringify({
@@ -82,7 +82,7 @@ const API = {
     },
 
     async submitRegistration(payload) {
-        const res = await this._request('/api/registrations/', {
+        const res = await this._request('api/registrations/', {
             method: 'POST',
             headers: this._headers(),
             body: JSON.stringify(payload),
