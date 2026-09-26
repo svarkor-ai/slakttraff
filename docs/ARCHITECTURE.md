@@ -8,7 +8,7 @@ site-password gated, RSVP with contact info, tree rendered from API data
 
 ```
 server.py           Repo-root entrypoint for the host: reads PORT env, runs uvicorn
-                    on 0.0.0.0:$PORT (no reload). Default port 8119.
+                    on 0.0.0.0:$PORT (no reload). Default port 8120 (8119 is the live portfolio app).
 hosting.yaml        Hosting manifest for the vm106 reconciler (strict JSON).
 app/
   main.py            FastAPI app: CORS (env SLAKTTRAFF_CORS_ORIGINS), /health,
@@ -59,7 +59,7 @@ data/
 
 ## Entrypoint
 
-`PORT=8119 python3 server.py` (or `.venv/bin/uvicorn app.main:app --port 8119`) —
+`PORT=8120 python3 server.py` (or `.venv/bin/uvicorn app.main:app --port 8120`) —
 GET / serves the password screen, `/api/*` the JSON API, `/health` the health check.
 All one origin.
 
