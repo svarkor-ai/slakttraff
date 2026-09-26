@@ -72,8 +72,31 @@ def test_health():
 
 def test_auth_wrong_password_rejected():
     r = client.post("/api/auth", json={"password": "wrong"})
-    assert r.status_code == 403
+    assert r.status_code in (403, 429)  # 429 when earlier tests tripped the limiter
     assert "token" not in r.json()
+
+
+def test_auth_non_ascii_password_rejected_not_500():
+    # Regression: hmac.compare_digest raised TypeError on non-ASCII input (500).
+    r = client.post("/api/auth", json={"password": "lösenördåä"})
+    assert r.status_code in (403, 429)
+    assert "token" not in r.json()
+
+
+def test_auth_rate_limit_blocks_parallel_brute_force():
+    """The failure counter must be parallel-safe: 10 rapid failures from one
+    IP trip the limit even though none of them sleeps (old sleep-based
+    throttle let any number of concurrent attempts through)."""
+    from app.auth import _failed_attempts, FAILED_ATTEMPTS_ALLOWED
+
+    _failed_attempts.clear()
+    codes = [
+        client.post("/api/auth", json={"password": f"wrong{i}"}).status_code
+        for i in range(FAILED_ATTEMPTS_ALLOWED + 3)
+    ]
+    assert 429 in codes
+    assert codes[-1] == 429
+    _failed_attempts.clear()
 
 
 def test_auth_empty_password_rejected():

@@ -46,6 +46,9 @@ const API = {
             body: JSON.stringify({ password: password }),
         });
         if (!res.ok) {
+            if (res.status === 429) {
+                throw new Error('För många försök — vänta en minut och försök igen.');
+            }
             return null;
         }
         const body = await res.json();

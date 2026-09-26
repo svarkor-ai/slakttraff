@@ -173,7 +173,13 @@ function bindPasswordGate() {
         const password = document.getElementById('password-input').value;
         const errorEl = document.getElementById('password-error');
         errorEl.textContent = '';
-        const token = await API.login(password);
+        let token = null;
+        try {
+            token = await API.login(password);
+        } catch (err) {
+            errorEl.textContent = err.message;
+            return;
+        }
         if (!token) {
             errorEl.textContent = 'Fel lösenord. Försök igen.';
             return;
