@@ -109,10 +109,11 @@ def is_valid_admin_token(token: str) -> bool:
 
 
 def require_token(authorization: str = Header(default="")) -> None:
-    """FastAPI dependency: 401 unless a valid Bearer token is presented."""
+    """FastAPI dependency: 401 unless a valid site OR admin Bearer token is
+    presented (an admin token can do everything a site token can)."""
     if authorization.startswith("Bearer "):
         token = authorization[len("Bearer "):]
-        if is_valid_token(token):
+        if is_valid_token(token) or is_valid_admin_token(token):
             return
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,

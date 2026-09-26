@@ -6,13 +6,16 @@ import tempfile
 _TMPDIR = tempfile.mkdtemp(prefix="slakttraff-test-")
 os.environ["SLAKTTRAFF_DATABASE_URL"] = f"sqlite:///{_TMPDIR}/test.db"
 
+import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
+from app import auth as auth_module  # noqa: E402
 from app.main import app  # noqa: E402
 
 client = TestClient(app)
 
 SITE_PASSWORD = "sibbamala"  # default; tests run without SITE_PASSWORD set
+ADMIN_PASSWORD = "admin-test-pw"
 
 
 def _auth_headers():
@@ -22,6 +25,16 @@ def _auth_headers():
 
 
 AUTH = _auth_headers()
+
+
+@pytest.fixture()
+def admin():
+    """Enable a test admin password; yield admin auth headers; restore unset."""
+    auth_module.ADMIN_PASSWORD = ADMIN_PASSWORD
+    auth_module._admin_tokens.clear()
+    yield {"Authorization": "Bearer " + auth_module.issue_admin_token()}
+    auth_module.ADMIN_PASSWORD = None
+    auth_module._admin_tokens.clear()
 
 
 def _person_payload(**overrides):
@@ -113,9 +126,54 @@ def test_auth_correct_password_returns_token():
 
 def test_api_requires_token():
     assert client.get("/api/persons/").status_code == 401
-    assert client.get("/api/registrations/").status_code == 401
-    assert client.get("/api/rsvp-replies/").status_code == 401
     assert client.post("/api/persons/", json=_person_payload()).status_code == 401
+
+
+def test_admin_endpoints_404_without_admin_password():
+    """ADMIN_PASSWORD unset (default): the admin surface does not exist."""
+    assert client.get("/api/rsvp-replies/").status_code == 404
+    assert client.get("/api/rsvp-replies/", headers=AUTH).status_code == 404
+    assert client.get("/api/registrations/", headers=AUTH).status_code == 404
+    assert client.post("/api/admin/auth", json={"password": "x"}).status_code == 404
+
+
+def test_admin_auth_flow():
+    """With ADMIN_PASSWORD set: correct password -> admin token; site token is
+    NOT an admin token; wrong admin password -> 403."""
+    auth_module.ADMIN_PASSWORD = ADMIN_PASSWORD
+    try:
+        r = client.post("/api/admin/auth", json={"password": ADMIN_PASSWORD})
+        assert r.status_code == 200
+        admin_headers = {"Authorization": "Bearer " + r.json()["token"]}
+        assert client.get("/api/rsvp-replies/", headers=admin_headers).status_code == 200
+        # A site-password token must not open admin endpoints (P1-4).
+        assert client.get("/api/rsvp-replies/", headers=AUTH).status_code == 401
+        r2 = client.post("/api/admin/auth", json={"password": "wrong"})
+        assert r2.status_code == 403
+    finally:
+        auth_module.ADMIN_PASSWORD = None
+        auth_module._admin_tokens.clear()
+
+
+def test_person_delete_with_site_token_rejected():
+    """P1-5: a plain site-password token must not delete persons."""
+    auth_module.ADMIN_PASSWORD = ADMIN_PASSWORD
+    try:
+        admin_headers = {"Authorization": "Bearer " + auth_module.issue_admin_token()}
+        pid = client.post("/api/persons/", json=_person_payload(),
+                          headers=admin_headers).json()["id"]
+        r = client.delete(f"/api/persons/{pid}", headers=AUTH)
+        assert r.status_code == 401
+        assert client.get(f"/api/persons/{pid}", headers=AUTH).status_code == 200
+    finally:
+        auth_module.ADMIN_PASSWORD = None
+        auth_module._admin_tokens.clear()
+
+
+def test_docs_disabled_by_default():
+    """P3: /docs and /openapi.json are off unless SLAKTTRAFF_DEBUG=1."""
+    assert client.get("/docs").status_code == 404
+    assert client.get("/openapi.json").status_code == 404
 
 
 def test_api_rejects_bad_token():
@@ -132,8 +190,8 @@ def test_root_serves_password_screen():
 
 # --- persons: valid transitions ---
 
-def test_person_create_and_get():
-    r = client.post("/api/persons/", json=_person_payload(), headers=AUTH)
+def test_person_create_and_get(admin):
+    r = client.post("/api/persons/", json=_person_payload(), headers=admin)
     assert r.status_code == 201
     body = r.json()
     assert body["name"] == "Erik Andersson"
@@ -144,41 +202,41 @@ def test_person_create_and_get():
     assert r2.json()["id"] == body["id"]
 
 
-def test_person_list():
-    client.post("/api/persons/", json=_person_payload(name="Lista Test"), headers=AUTH)
+def test_person_list(admin):
+    client.post("/api/persons/", json=_person_payload(name="Lista Test"), headers=admin)
     r = client.get("/api/persons/", headers=AUTH)
     assert r.status_code == 200
     assert any(p["name"] == "Lista Test" for p in r.json())
 
 
-def test_person_update_partial():
-    pid = client.post("/api/persons/", json=_person_payload(), headers=AUTH).json()["id"]
-    r = client.put(f"/api/persons/{pid}", json={"role": "Barn"}, headers=AUTH)
+def test_person_update_partial(admin):
+    pid = client.post("/api/persons/", json=_person_payload(), headers=admin).json()["id"]
+    r = client.put(f"/api/persons/{pid}", json={"role": "Barn"}, headers=admin)
     assert r.status_code == 200
     assert r.json()["role"] == "Barn"
     assert r.json()["name"] == "Erik Andersson"  # untouched field preserved
 
 
-def test_person_delete():
-    pid = client.post("/api/persons/", json=_person_payload(), headers=AUTH).json()["id"]
-    assert client.delete(f"/api/persons/{pid}", headers=AUTH).status_code == 200
+def test_person_delete(admin):
+    pid = client.post("/api/persons/", json=_person_payload(), headers=admin).json()["id"]
+    assert client.delete(f"/api/persons/{pid}", headers=admin).status_code == 200
     assert client.get(f"/api/persons/{pid}", headers=AUTH).status_code == 404
 
 
 # --- persons: negative cases ---
 
-def test_person_rejects_blank_name():
-    r = client.post("/api/persons/", json=_person_payload(name="   "), headers=AUTH)
+def test_person_rejects_blank_name(admin):
+    r = client.post("/api/persons/", json=_person_payload(name="   "), headers=admin)
     assert r.status_code == 422
 
 
-def test_person_rejects_bad_birth_year():
-    r = client.post("/api/persons/", json=_person_payload(birth_year=1800), headers=AUTH)
+def test_person_rejects_bad_birth_year(admin):
+    r = client.post("/api/persons/", json=_person_payload(birth_year=1800), headers=admin)
     assert r.status_code == 422
 
 
-def test_person_rejects_bad_generation():
-    r = client.post("/api/persons/", json=_person_payload(generation=9), headers=AUTH)
+def test_person_rejects_bad_generation(admin):
+    r = client.post("/api/persons/", json=_person_payload(generation=9), headers=admin)
     assert r.status_code == 422
 
 
@@ -188,14 +246,14 @@ def test_person_get_unknown_returns_404():
 
 # --- RSVP (password-gated, with contact info) ---
 
-def test_rsvp_requires_token():
-    pid = client.post("/api/persons/", json=_person_payload(), headers=AUTH).json()["id"]
+def test_rsvp_requires_token(admin):
+    pid = client.post("/api/persons/", json=_person_payload(), headers=admin).json()["id"]
     r = client.post(f"/api/persons/{pid}/rsvp", json=_rsvp_payload())
     assert r.status_code == 401
 
 
-def test_rsvp_accept_and_change_with_contact():
-    pid = client.post("/api/persons/", json=_person_payload(), headers=AUTH).json()["id"]
+def test_rsvp_accept_and_change_with_contact(admin):
+    pid = client.post("/api/persons/", json=_person_payload(), headers=admin).json()["id"]
     r = client.post(f"/api/persons/{pid}/rsvp", json=_rsvp_payload(), headers=AUTH)
     assert r.status_code == 200
     assert r.json()["rsvp_status"] == "accepted"
@@ -208,62 +266,61 @@ def test_rsvp_accept_and_change_with_contact():
     assert r2.status_code == 200
     assert r2.json()["rsvp_status"] == "declined"
 
-    # Both replies are stored with their contact info (admin view).
-    replies = client.get("/api/rsvp-replies/", headers=AUTH).json()
+    # Upsert (P2): one reply row per person — the repeat submit REPLACES it.
+    replies = client.get("/api/rsvp-replies/", headers=admin).json()
     mine = [x for x in replies if x["person_id"] == pid]
-    assert len(mine) == 2
-    assert mine[0]["email"] == "invitee@example.se"
-    assert mine[0]["phone"] == "070-123 45 67"
-    assert mine[1]["email"] == "other@example.se"
+    assert len(mine) == 1
+    assert mine[0]["email"] == "other@example.se"
+    assert mine[0]["status"] == "declined"
 
 
-def test_rsvp_requires_email():
-    pid = client.post("/api/persons/", json=_person_payload(), headers=AUTH).json()["id"]
+def test_rsvp_requires_email(admin):
+    pid = client.post("/api/persons/", json=_person_payload(), headers=admin).json()["id"]
     payload = _rsvp_payload()
     del payload["email"]
     r = client.post(f"/api/persons/{pid}/rsvp", json=payload, headers=AUTH)
     assert r.status_code == 422
 
 
-def test_rsvp_rejects_invalid_email():
-    pid = client.post("/api/persons/", json=_person_payload(), headers=AUTH).json()["id"]
+def test_rsvp_rejects_invalid_email(admin):
+    pid = client.post("/api/persons/", json=_person_payload(), headers=admin).json()["id"]
     r = client.post(
         f"/api/persons/{pid}/rsvp", json=_rsvp_payload(email="not-an-email"), headers=AUTH
     )
     assert r.status_code == 422
 
 
-def test_rsvp_optional_fields_default_null():
-    pid = client.post("/api/persons/", json=_person_payload(), headers=AUTH).json()["id"]
+def test_rsvp_optional_fields_default_null(admin):
+    pid = client.post("/api/persons/", json=_person_payload(), headers=admin).json()["id"]
     r = client.post(
         f"/api/persons/{pid}/rsvp",
         json={"status": "accepted", "email": "minimal@example.se"},
         headers=AUTH,
     )
     assert r.status_code == 200
-    replies = client.get("/api/rsvp-replies/", headers=AUTH).json()
+    replies = client.get("/api/rsvp-replies/", headers=admin).json()
     mine = [x for x in replies if x["person_id"] == pid]
     assert mine and mine[0]["phone"] is None and mine[0]["notes"] is None
 
 
-def test_rsvp_rejects_pending():
-    pid = client.post("/api/persons/", json=_person_payload(), headers=AUTH).json()["id"]
+def test_rsvp_rejects_pending(admin):
+    pid = client.post("/api/persons/", json=_person_payload(), headers=admin).json()["id"]
     r = client.post(
         f"/api/persons/{pid}/rsvp", json=_rsvp_payload(status="pending"), headers=AUTH
     )
     assert r.status_code == 422
 
 
-def test_rsvp_rejects_invalid_status():
-    pid = client.post("/api/persons/", json=_person_payload(), headers=AUTH).json()["id"]
+def test_rsvp_rejects_invalid_status(admin):
+    pid = client.post("/api/persons/", json=_person_payload(), headers=admin).json()["id"]
     r = client.post(
         f"/api/persons/{pid}/rsvp", json=_rsvp_payload(status="maybe"), headers=AUTH
     )
     assert r.status_code == 422
 
 
-def test_rsvp_rejects_missing_status():
-    pid = client.post("/api/persons/", json=_person_payload(), headers=AUTH).json()["id"]
+def test_rsvp_rejects_missing_status(admin):
+    pid = client.post("/api/persons/", json=_person_payload(), headers=admin).json()["id"]
     payload = _rsvp_payload()
     del payload["status"]
     r = client.post(f"/api/persons/{pid}/rsvp", json=payload, headers=AUTH)
@@ -275,9 +332,9 @@ def test_rsvp_unknown_person_404():
     assert r.status_code == 404
 
 
-def test_person_list_includes_rsvp_status():
+def test_person_list_includes_rsvp_status(admin):
     pid = client.post(
-        "/api/persons/", json=_person_payload(name="Status Test"), headers=AUTH
+        "/api/persons/", json=_person_payload(name="Status Test"), headers=admin
     ).json()["id"]
     client.post(f"/api/persons/{pid}/rsvp", json=_rsvp_payload(), headers=AUTH)
     r = client.get("/api/persons/", headers=AUTH)
@@ -303,11 +360,11 @@ def test_static_assets_served():
 
 # --- registrations ---
 
-def test_registration_create_and_list():
+def test_registration_create_and_list(admin):
     r = client.post("/api/registrations/", json=_registration_payload(), headers=AUTH)
     assert r.status_code == 201
     assert r.json()["group_size"] == "2"
-    r2 = client.get("/api/registrations/", headers=AUTH)
+    r2 = client.get("/api/registrations/", headers=admin)
     assert any(x["email"] == "karin@example.se" for x in r2.json())
 
 
@@ -332,11 +389,11 @@ def test_registration_rejects_empty_generations():
     assert r.status_code == 422
 
 
-def test_registration_update_and_delete():
+def test_registration_update_and_delete(admin):
     rid = client.post("/api/registrations/", json=_registration_payload(), headers=AUTH).json()["id"]
-    r = client.put(f"/api/registrations/{rid}", json={"notes": "Vegan", "group_size": "3"}, headers=AUTH)
+    r = client.put(f"/api/registrations/{rid}", json={"notes": "Vegan", "group_size": "3"}, headers=admin)
     assert r.status_code == 200
     assert r.json()["notes"] == "Vegan"
     assert r.json()["group_size"] == "3"
-    assert client.delete(f"/api/registrations/{rid}", headers=AUTH).status_code == 200
-    assert client.get(f"/api/registrations/{rid}", headers=AUTH).status_code == 404
+    assert client.delete(f"/api/registrations/{rid}", headers=admin).status_code == 200
+    assert client.get(f"/api/registrations/{rid}", headers=admin).status_code == 404

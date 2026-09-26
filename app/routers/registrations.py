@@ -4,7 +4,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.auth import require_token
+from app.auth import require_admin_token, require_token
 from app.database import get_db
 from app.models.registration import Registration
 from app.schemas.registration import (
@@ -33,12 +33,16 @@ def create_registration(reg: RegistrationCreate, db: Session = Depends(get_db)):
     return db_reg
 
 
-@router.get("/", response_model=List[RegistrationResponse])
+@router.get("/", response_model=List[RegistrationResponse],
+            dependencies=[Depends(require_admin_token)])
 def list_registrations(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    """Admin view: registrations carry contact info, so listing them needs an
+    admin token (the public signup form itself is POST, site token only)."""
     return db.query(Registration).offset(skip).limit(limit).all()
 
 
-@router.get("/{reg_id}", response_model=RegistrationResponse)
+@router.get("/{reg_id}", response_model=RegistrationResponse,
+            dependencies=[Depends(require_admin_token)])
 def get_registration(reg_id: int, db: Session = Depends(get_db)):
     db_reg = db.query(Registration).filter(Registration.id == reg_id).first()
     if db_reg is None:
@@ -46,7 +50,8 @@ def get_registration(reg_id: int, db: Session = Depends(get_db)):
     return db_reg
 
 
-@router.put("/{reg_id}", response_model=RegistrationResponse)
+@router.put("/{reg_id}", response_model=RegistrationResponse,
+            dependencies=[Depends(require_admin_token)])
 def update_registration(reg_id: int, reg_update: RegistrationUpdate, db: Session = Depends(get_db)):
     db_reg = db.query(Registration).filter(Registration.id == reg_id).first()
     if db_reg is None:
@@ -66,7 +71,8 @@ def update_registration(reg_id: int, reg_update: RegistrationUpdate, db: Session
     return db_reg
 
 
-@router.delete("/{reg_id}", status_code=status.HTTP_200_OK)
+@router.delete("/{reg_id}", status_code=status.HTTP_200_OK,
+               dependencies=[Depends(require_admin_token)])
 def delete_registration(reg_id: int, db: Session = Depends(get_db)):
     db_reg = db.query(Registration).filter(Registration.id == reg_id).first()
     if db_reg is None:

@@ -14,9 +14,11 @@ app/
   main.py            FastAPI app: CORS (env SLAKTTRAFF_CORS_ORIGINS), /health,
                      seeds family tree on fresh DB, mounts teddy/ as static files at "/"
   auth.py            Site-password gate: SITE_PASSWORD env (default "sibbamala"),
-                     hmac.compare_digest check, in-memory opaque session tokens
-                     (12 h TTL), parallel-safe per-IP failure counter (max 5/60 s → 429),
-                     require_token dep
+                     hmac.compare_digest check (UTF-8 encoded, any input -> 403 not 500),
+                     in-memory opaque session tokens (12 h TTL), parallel-safe per-IP
+                     failure counter (max 5/60 s → 429), require_token dep;
+                     ADMIN_PASSWORD env (NO default) + admin token store +
+                     require_admin_token dep (404 when ADMIN_PASSWORD unset)
   database.py        SQLAlchemy engine; SQLite at data/slakttraff.db (env SLAKTTRAFF_DATABASE_URL)
   seed.py            Loads data/family.json + seed_persons_if_empty() (empty tree + log
                      warning when the file is missing)
@@ -30,10 +32,14 @@ app/
                           RsvpSubmit (status + email + phone? + notes?), RsvpReplyResponse
   schemas/registration.py RegistrationBase/Create/Update/Registration/RegistrationResponse
   routers/auth.py         POST /api/auth {"password"} -> {"token"} (403 wrong password,
-                          429 when the per-IP failure limit trips)
-  routers/persons.py      /api/persons CRUD + POST /api/persons/{id}/rsvp (token required)
-  routers/registrations.py /api/registrations CRUD (token required)
-  routers/rsvp_replies.py  GET /api/rsvp-replies (token required; the admin contact-info view)
+                          429 when the per-IP failure limit trips) and
+                          POST /api/admin/auth -> admin token (404 when ADMIN_PASSWORD unset)
+  routers/persons.py      GET persons + POST /api/persons/{id}/rsvp (site token);
+                          POST/PUT/DELETE persons (admin token). RSVP is an UPSERT:
+                          one RsvpReply row per person, repeat submits update it
+  routers/registrations.py POST /api/registrations/ (site token, the public signup form);
+                          GET/PUT/DELETE (admin token — registrations carry contact info)
+  routers/rsvp_replies.py  GET /api/rsvp-replies (admin token only; the contact-info view)
 teddy/
   index.html          markup (password screen, header, tree container, form, person modal
                       with contact fields)
@@ -68,7 +74,21 @@ per 60 s, advanced atomically under a lock — extra connections cannot bypass i
 and return 429 when the limit trips, 403 otherwise. Every persons /
 registrations / rsvp-replies endpoint requires `Authorization: Bearer <token>`
 (401 without). The frontend stores the token in sessionStorage, shows the password
-screen first, and returns to it on any 401.
+screen first, and returns to it on any 401 (verified: teddy/api.js `_request`
+clears the token and calls `onUnauthorized` on 401, so a server restart — which
+wipes the in-memory sessions — sends visitors back to the password screen
+gracefully).
+
+## Admin flow (owner decision 2026-09-26, DA fix round 1)
+
+`ADMIN_PASSWORD` env, NO insecure default. When unset, every admin endpoint
+returns 404 — the admin surface does not exist on that deployment. When set,
+`POST /api/admin/auth {"password"}` returns a separate admin session token
+(own in-memory store; admin tokens also satisfy the site-token check). Admin
+token is required for: GET/PUT/DELETE on registrations, GET /api/rsvp-replies,
+and POST/PUT/DELETE on persons. The site password remains enough for GET tree
+data and the open RSVP endpoint. `/docs`, `/redoc` and `/openapi.json` are
+disabled unless `SLAKTTRAFF_DEBUG=1`.
 
 ## Data store
 
@@ -81,21 +101,18 @@ at import, then `seed_persons_if_empty()` seeds the family tree from
 POST /api/persons/{id}/rsvp takes `{"status": "accepted"|"declined", "email": ...,
 "phone"?, "notes"?}` with a valid session token. `pending` and unknown values → 422;
 missing/invalid email → 422; unknown person → 404. Each reply is stored as an
-RsvpReply row; contact info is exposed ONLY via the token-protected
-GET /api/rsvp-replies — readable by any site-password holder (owner decision
-2026-09-26: one shared password gates everything). Spot colours: green = accepted,
-red = declined, original = pending.
+RsvpReply row — one row per person (upsert: a repeat submit updates the
+existing row). Contact info is exposed ONLY via GET /api/rsvp-replies, which
+requires an ADMIN token (404 when ADMIN_PASSWORD is unset, 401 with a mere site
+token). Spot colours: green = accepted, red = declined, original = pending.
 
 ## Known accepted risks (owner decisions 2026-09-26)
 
 - Session tokens are in-memory: a server restart logs everyone out (acceptable for
   this event site; revisit if persistence is wanted).
-- One shared password means any password holder can read `/api/rsvp-replies`
-  (all invitee contact info) and create/edit/delete persons, including
-  `DELETE /api/persons/{id}`. Accepted under "shared password gates everything";
-  revisit with a separate admin credential if that changes.
-- The default password is public in this repo; set `SITE_PASSWORD` in the host
-  environment before publishing or the gate is a courtesy screen only.
+- The default site password is public in this repo (owner-accepted, shared with
+  invitees); set `SITE_PASSWORD` in the host environment to override it, and set
+  `ADMIN_PASSWORD` to enable the admin view (contact info + person editing).
 - RSVP and the registration form both record attendance in separate tables
   (RsvpReply vs Registration) and are not reconciled: RSVP = per-spot answer for
   invited family, registration = general sign-up.

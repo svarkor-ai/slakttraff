@@ -5,7 +5,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.auth import require_token
+from app.auth import require_admin_token, require_token
 from app.database import get_db
 from app.models.person import Person
 from app.models.rsvp_reply import RsvpReply
@@ -17,7 +17,8 @@ router = APIRouter(
 )
 
 
-@router.post("/", response_model=PersonResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=PersonResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_admin_token)])
 def create_person(person: PersonCreate, db: Session = Depends(get_db)):
     db_person = Person(
         name=person.name,
@@ -51,7 +52,8 @@ def get_person(person_id: int, db: Session = Depends(get_db)):
     return db_person
 
 
-@router.put("/{person_id}", response_model=PersonResponse)
+@router.put("/{person_id}", response_model=PersonResponse,
+            dependencies=[Depends(require_admin_token)])
 def update_person(person_id: int, person_update: PersonUpdate, db: Session = Depends(get_db)):
     db_person = db.query(Person).filter(Person.id == person_id).first()
     if db_person is None:
@@ -65,7 +67,8 @@ def update_person(person_id: int, person_update: PersonUpdate, db: Session = Dep
     return db_person
 
 
-@router.delete("/{person_id}", status_code=status.HTTP_200_OK)
+@router.delete("/{person_id}", status_code=status.HTTP_200_OK,
+               dependencies=[Depends(require_admin_token)])
 def delete_person(person_id: int, db: Session = Depends(get_db)):
     db_person = db.query(Person).filter(Person.id == person_id).first()
     if db_person is None:
@@ -85,13 +88,16 @@ def submit_rsvp(person_id: int, rsvp: RsvpSubmit, db: Session = Depends(get_db))
         raise HTTPException(status_code=422, detail="RSVP must be accepted or declined")
 
     db_person.rsvp_status = rsvp.status.value
-    db.add(RsvpReply(
-        person_id=person_id,
-        status=rsvp.status.value,
-        email=rsvp.email,
-        phone=rsvp.phone,
-        notes=rsvp.notes,
-    ))
+    # Upsert: one reply row per person — a repeat submit updates the existing
+    # row instead of accumulating duplicates.
+    reply = db.query(RsvpReply).filter(RsvpReply.person_id == person_id).first()
+    if reply is None:
+        reply = RsvpReply(person_id=person_id)
+        db.add(reply)
+    reply.status = rsvp.status.value
+    reply.email = rsvp.email
+    reply.phone = rsvp.phone
+    reply.notes = rsvp.notes
     db.commit()
     db.refresh(db_person)
     return db_person

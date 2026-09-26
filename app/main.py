@@ -14,10 +14,16 @@ from app.seed import seed_persons_if_empty
 Base.metadata.create_all(bind=engine)
 seed_persons_if_empty()
 
+# API docs (/docs, /openapi.json) are disabled by default — free reconnaissance
+# on a public site. Set SLAKTTRAFF_DEBUG=1 to re-enable them in development.
+_debug = os.environ.get("SLAKTTRAFF_DEBUG", "") == "1"
 app = FastAPI(
     title="Släktträff 2026 API",
     description="API for family tree and registration management",
     version="1.1.0",
+    docs_url="/docs" if _debug else None,
+    redoc_url="/redoc" if _debug else None,
+    openapi_url="/openapi.json" if _debug else None,
 )
 
 # CORS: explicit origins only (comma-separated env), never wildcard + credentials.
