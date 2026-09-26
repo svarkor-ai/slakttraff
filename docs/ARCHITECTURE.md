@@ -19,7 +19,7 @@ app/
                      failure counter (max 5/60 s → 429), require_token dep;
                      ADMIN_PASSWORD env (NO default) + admin token store +
                      require_admin_token dep (401 without admin token)
-  database.py        SQLAlchemy engine; SQLite at data/slakttraff.db (env SLAKTTRAFF_DATABASE_URL)
+  database.py        SQLAlchemy engine; SQLite at data/slakttraff.db locally; $STATE_DIRECTORY/slakttraff.db on vm106 (set by server.py; env SLAKTTRAFF_DATABASE_URL wins)
   seed.py            Loads data/family.json + seed_persons_if_empty() (empty tree + log
                      warning when the file is missing)
   models/person.py        Person (name, birth_year, generation, role, relation, description,
@@ -91,7 +91,7 @@ disabled unless `SLAKTTRAFF_DEBUG=1`.
 
 ## Data store
 
-Single SQLite file `data/slakttraff.db`. No migrations tool; `Base.metadata.create_all`
+Single SQLite file: `data/slakttraff.db` locally, `$STATE_DIRECTORY/slakttraff.db` on vm106 (the app dir is read-only there). No migrations tool; `Base.metadata.create_all`
 at import, then `seed_persons_if_empty()` seeds the family tree from
 `data/family.json` once (empty tree + log warning if that file is missing).
 
