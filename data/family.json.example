@@ -1,0 +1,620 @@
+[
+  {
+    "key": "person1",
+    "name": "Person 1",
+    "generation": 1,
+    "role": "Grundare",
+    "relation": "Familiens äldste",
+    "description": "Släktens grundare. Har 2 barn.",
+    "parents": []
+  },
+  {
+    "key": "person2",
+    "name": "Person 2",
+    "generation": 1,
+    "role": "Grundare",
+    "relation": "Familiens äldste",
+    "description": "En av de sju grundarna. Har 1 barn.",
+    "parents": []
+  },
+  {
+    "key": "person3",
+    "name": "Person 3",
+    "generation": 1,
+    "role": "Grundare",
+    "relation": "Familiens äldste",
+    "description": "En av de sju grundarna. Har 2 barn.",
+    "parents": []
+  },
+  {
+    "key": "person4",
+    "name": "Person 4",
+    "generation": 1,
+    "role": "Grundare",
+    "relation": "Familiens äldste",
+    "description": "En av de sju grundarna. Har 3 barn: Lars, Lena och Frank.",
+    "parents": []
+  },
+  {
+    "key": "person5",
+    "name": "Person 5",
+    "generation": 1,
+    "role": "Grundare",
+    "relation": "Familiens äldste",
+    "description": "En av de sju grundarna. Har 5 barn.",
+    "parents": []
+  },
+  {
+    "key": "person6",
+    "name": "Person 6",
+    "generation": 1,
+    "role": "Grundare",
+    "relation": "Familiens äldste",
+    "description": "En av de sju grundarna. Har 1 barn.",
+    "parents": []
+  },
+  {
+    "key": "person7",
+    "name": "Person 7",
+    "generation": 1,
+    "role": "Grundare",
+    "relation": "Familiens äldste",
+    "description": "En av de sju grundarna. Har 1 barn.",
+    "parents": []
+  },
+  {
+    "key": "person8",
+    "name": "Person 8",
+    "generation": 2,
+    "role": "Barn",
+    "relation": "Barn till Erik",
+    "description": "Äldsta barnet till Erik.",
+    "parents": [
+      "person1"
+    ]
+  },
+  {
+    "key": "person9",
+    "name": "Person 9",
+    "generation": 2,
+    "role": "Barn",
+    "relation": "Barn till Erik",
+    "description": "Andra barnet till Erik.",
+    "parents": [
+      "person1"
+    ]
+  },
+  {
+    "key": "person10",
+    "name": "Person 10",
+    "generation": 2,
+    "role": "Barn",
+    "relation": "Barn till Gösta",
+    "description": "Endaste barnet till Gösta.",
+    "parents": [
+      "person2"
+    ]
+  },
+  {
+    "key": "person11",
+    "name": "Person 11",
+    "generation": 2,
+    "role": "Barn",
+    "relation": "Barn till Gerty",
+    "description": "Äldsta barnet till Gerty.",
+    "parents": [
+      "person3"
+    ]
+  },
+  {
+    "key": "person12",
+    "name": "Person 12",
+    "generation": 2,
+    "role": "Barn",
+    "relation": "Barn till Gerty",
+    "description": "Andra barnet till Gerty.",
+    "parents": [
+      "person3"
+    ]
+  },
+  {
+    "key": "person13",
+    "name": "Person 13",
+    "generation": 2,
+    "role": "Barn",
+    "relation": "Barn till Nanna",
+    "description": "Äldsta barnet till Nanna. Har 2 barn: Aron och Sandra.",
+    "parents": [
+      "person4"
+    ]
+  },
+  {
+    "key": "person14",
+    "name": "Person 14",
+    "generation": 2,
+    "role": "Barn",
+    "relation": "Barn till Nanna",
+    "description": "Mellankind till Nanna. Har 2 barn: Elin och Malin.",
+    "parents": [
+      "person4"
+    ]
+  },
+  {
+    "key": "person15",
+    "name": "Person 15",
+    "generation": 2,
+    "role": "Barn",
+    "relation": "Barn till Nanna",
+    "description": "Yngsta barnet till Nanna. Har 1 barn: Emelie.",
+    "parents": [
+      "person4"
+    ]
+  },
+  {
+    "key": "person16",
+    "name": "Person 16",
+    "generation": 2,
+    "role": "Barn",
+    "relation": "Barn till Stig",
+    "description": "Äldsta barnet till Stig.",
+    "parents": [
+      "person5"
+    ]
+  },
+  {
+    "key": "person17",
+    "name": "Person 17",
+    "generation": 2,
+    "role": "Barn",
+    "relation": "Barn till Stig",
+    "description": "Andra barnet till Stig.",
+    "parents": [
+      "person5"
+    ]
+  },
+  {
+    "key": "person18",
+    "name": "Person 18",
+    "generation": 2,
+    "role": "Barn",
+    "relation": "Barn till Stig",
+    "description": "Tredje barnet till Stig.",
+    "parents": [
+      "person5"
+    ]
+  },
+  {
+    "key": "person19",
+    "name": "Person 19",
+    "generation": 2,
+    "role": "Barn",
+    "relation": "Barn till Stig",
+    "description": "Fjärde barnet till Stig.",
+    "parents": [
+      "person5"
+    ]
+  },
+  {
+    "key": "person20",
+    "name": "Person 20",
+    "generation": 2,
+    "role": "Barn",
+    "relation": "Barn till Stig",
+    "description": "Yngsta barnet till Stig.",
+    "parents": [
+      "person5"
+    ]
+  },
+  {
+    "key": "person21",
+    "name": "Person 21",
+    "generation": 2,
+    "role": "Barn",
+    "relation": "Barn till Ulla",
+    "description": "Endaste barnet till Ulla.",
+    "parents": [
+      "person6"
+    ]
+  },
+  {
+    "key": "person22",
+    "name": "Person 22",
+    "generation": 2,
+    "role": "Barn",
+    "relation": "Barn till Britt",
+    "description": "Endaste barnet till Britt.",
+    "parents": [
+      "person7"
+    ]
+  },
+  {
+    "key": "person23",
+    "name": "Person 23",
+    "generation": 3,
+    "role": "Barnbarn",
+    "relation": "Barn till Lars",
+    "description": "Äldsta barnet till Lars.",
+    "parents": [
+      "person13"
+    ]
+  },
+  {
+    "key": "person24",
+    "name": "Person 24",
+    "generation": 3,
+    "role": "Barnbarn",
+    "relation": "Barn till Lars",
+    "description": "Andra barnet till Lars.",
+    "parents": [
+      "person13"
+    ]
+  },
+  {
+    "key": "person25",
+    "name": "Person 25",
+    "generation": 3,
+    "role": "Barnbarn",
+    "relation": "Barn till Lena",
+    "description": "Äldsta barnet till Lena. Har 2 barn: Noa och Freja.",
+    "parents": [
+      "person14"
+    ]
+  },
+  {
+    "key": "person26",
+    "name": "Person 26",
+    "generation": 3,
+    "role": "Barnbarn",
+    "relation": "Barn till Lena",
+    "description": "Andra barnet till Lena. Har 3 barn: Amelia, Emmy och Anton.",
+    "parents": [
+      "person14"
+    ]
+  },
+  {
+    "key": "person27",
+    "name": "Person 27",
+    "generation": 3,
+    "role": "Barnbarn",
+    "relation": "Barn till Frank",
+    "description": "Endaste barnet till Frank.",
+    "parents": [
+      "person15"
+    ]
+  },
+  {
+    "key": "person28",
+    "name": "Person 28",
+    "generation": 3,
+    "role": "Barnbarn",
+    "relation": "Barnbarn",
+    "description": "Barnbarn i släkten.",
+    "parents": []
+  },
+  {
+    "key": "person29",
+    "name": "Person 29",
+    "generation": 3,
+    "role": "Barnbarn",
+    "relation": "Barnbarn",
+    "description": "Barnbarn i släkten.",
+    "parents": []
+  },
+  {
+    "key": "person30",
+    "name": "Person 30",
+    "generation": 3,
+    "role": "Barnbarn",
+    "relation": "Barnbarn",
+    "description": "Barnbarn i släkten.",
+    "parents": []
+  },
+  {
+    "key": "person31",
+    "name": "Person 31",
+    "generation": 3,
+    "role": "Barnbarn",
+    "relation": "Barnbarn",
+    "description": "Barnbarn i släkten.",
+    "parents": []
+  },
+  {
+    "key": "person32",
+    "name": "Person 32",
+    "generation": 3,
+    "role": "Barnbarn",
+    "relation": "Barnbarn",
+    "description": "Barnbarn i släkten.",
+    "parents": []
+  },
+  {
+    "key": "person33",
+    "name": "Person 33",
+    "generation": 3,
+    "role": "Barnbarn",
+    "relation": "Barnbarn",
+    "description": "Barnbarn i släkten.",
+    "parents": []
+  },
+  {
+    "key": "person34",
+    "name": "Person 34",
+    "generation": 3,
+    "role": "Barnbarn",
+    "relation": "Barnbarn",
+    "description": "Barnbarn i släkten.",
+    "parents": []
+  },
+  {
+    "key": "person35",
+    "name": "Person 35",
+    "generation": 3,
+    "role": "Barnbarn",
+    "relation": "Barnbarn",
+    "description": "Barnbarn i släkten.",
+    "parents": []
+  },
+  {
+    "key": "person36",
+    "name": "Person 36",
+    "generation": 3,
+    "role": "Barnbarn",
+    "relation": "Barnbarn",
+    "description": "Barnbarn i släkten.",
+    "parents": []
+  },
+  {
+    "key": "person37",
+    "name": "Person 37",
+    "generation": 3,
+    "role": "Barnbarn",
+    "relation": "Barnbarn",
+    "description": "Barnbarn i släkten.",
+    "parents": []
+  },
+  {
+    "key": "person38",
+    "name": "Person 38",
+    "generation": 3,
+    "role": "Barnbarn",
+    "relation": "Barnbarn",
+    "description": "Barnbarn i släkten.",
+    "parents": []
+  },
+  {
+    "key": "person39",
+    "name": "Person 39",
+    "generation": 3,
+    "role": "Barnbarn",
+    "relation": "Barnbarn",
+    "description": "Barnbarn i släkten.",
+    "parents": []
+  },
+  {
+    "key": "person40",
+    "name": "Person 40",
+    "generation": 3,
+    "role": "Barnbarn",
+    "relation": "Barnbarn",
+    "description": "Barnbarn i släkten.",
+    "parents": []
+  },
+  {
+    "key": "person41",
+    "name": "Person 41",
+    "generation": 3,
+    "role": "Barnbarn",
+    "relation": "Barnbarn",
+    "description": "Barnbarn i släkten.",
+    "parents": []
+  },
+  {
+    "key": "person42",
+    "name": "Person 42",
+    "generation": 3,
+    "role": "Barnbarn",
+    "relation": "Barnbarn",
+    "description": "Barnbarn i släkten.",
+    "parents": []
+  },
+  {
+    "key": "person43",
+    "name": "Person 43",
+    "generation": 4,
+    "role": "Barnbarnsbarn",
+    "relation": "Barn till Aron",
+    "description": "Äldsta barnet till Aron.",
+    "parents": [
+      "person23"
+    ]
+  },
+  {
+    "key": "person44",
+    "name": "Person 44",
+    "generation": 4,
+    "role": "Barnbarnsbarn",
+    "relation": "Barn till Aron",
+    "description": "Andra barnet till Aron.",
+    "parents": [
+      "person23"
+    ]
+  },
+  {
+    "key": "person45",
+    "name": "Person 45",
+    "generation": 4,
+    "role": "Barnbarnsbarn",
+    "relation": "Barn till Sandra",
+    "description": "Äldsta barnet till Sandra.",
+    "parents": [
+      "person24"
+    ]
+  },
+  {
+    "key": "person46",
+    "name": "Person 46",
+    "generation": 4,
+    "role": "Barnbarnsbarn",
+    "relation": "Barn till Sandra",
+    "description": "Mellankind till Sandra.",
+    "parents": [
+      "person24"
+    ]
+  },
+  {
+    "key": "person47",
+    "name": "Person 47",
+    "generation": 4,
+    "role": "Barnbarnsbarn",
+    "relation": "Barn till Sandra",
+    "description": "Yngsta barnet till Sandra.",
+    "parents": [
+      "person24"
+    ]
+  },
+  {
+    "key": "person48",
+    "name": "Person 48",
+    "generation": 4,
+    "role": "Barnbarnsbarn",
+    "relation": "Barn till Elin",
+    "description": "Äldsta barnet till Elin.",
+    "parents": [
+      "person25"
+    ]
+  },
+  {
+    "key": "person49",
+    "name": "Person 49",
+    "generation": 4,
+    "role": "Barnbarnsbarn",
+    "relation": "Barn till Elin",
+    "description": "Andra barnet till Elin.",
+    "parents": [
+      "person25"
+    ]
+  },
+  {
+    "key": "person50",
+    "name": "Person 50",
+    "generation": 4,
+    "role": "Barnbarnsbarn",
+    "relation": "Barn till Malin",
+    "description": "Äldsta barnet till Malin.",
+    "parents": [
+      "person26"
+    ]
+  },
+  {
+    "key": "person51",
+    "name": "Person 51",
+    "generation": 4,
+    "role": "Barnbarnsbarn",
+    "relation": "Barn till Malin",
+    "description": "Andra barnet till Malin.",
+    "parents": [
+      "person26"
+    ]
+  },
+  {
+    "key": "person52",
+    "name": "Person 52",
+    "generation": 4,
+    "role": "Barnbarnsbarn",
+    "relation": "Barn till Malin",
+    "description": "Tredje barnet till Malin.",
+    "parents": [
+      "person26"
+    ]
+  },
+  {
+    "key": "person53",
+    "name": "Person 53",
+    "generation": 4,
+    "role": "Barnbarnsbarn",
+    "relation": "Barnbarnsbarn",
+    "description": "Barnbarnsbarn i släkten.",
+    "parents": []
+  },
+  {
+    "key": "person54",
+    "name": "Person 54",
+    "generation": 4,
+    "role": "Barnbarnsbarn",
+    "relation": "Barnbarnsbarn",
+    "description": "Barnbarnsbarn i släkten.",
+    "parents": []
+  },
+  {
+    "key": "person55",
+    "name": "Person 55",
+    "generation": 4,
+    "role": "Barnbarnsbarn",
+    "relation": "Barnbarnsbarn",
+    "description": "Barnbarnsbarn i släkten.",
+    "parents": []
+  },
+  {
+    "key": "person56",
+    "name": "Person 56",
+    "generation": 4,
+    "role": "Barnbarnsbarn",
+    "relation": "Barnbarnsbarn",
+    "description": "Barnbarnsbarn i släkten.",
+    "parents": []
+  },
+  {
+    "key": "person57",
+    "name": "Person 57",
+    "generation": 4,
+    "role": "Barnbarnsbarn",
+    "relation": "Barnbarnsbarn",
+    "description": "Barnbarnsbarn i släkten.",
+    "parents": []
+  },
+  {
+    "key": "person58",
+    "name": "Person 58",
+    "generation": 4,
+    "role": "Barnbarnsbarn",
+    "relation": "Barnbarnsbarn",
+    "description": "Barnbarnsbarn i släkten.",
+    "parents": []
+  },
+  {
+    "key": "person59",
+    "name": "Person 59",
+    "generation": 4,
+    "role": "Barnbarnsbarn",
+    "relation": "Barnbarnsbarn",
+    "description": "Barnbarnsbarn i släkten.",
+    "parents": []
+  },
+  {
+    "key": "person60",
+    "name": "Person 60",
+    "generation": 5,
+    "role": "Barnbarnsbarnsbarn",
+    "relation": "Barnbarnsbarnsbarn",
+    "description": "Yngsta generationen i släkten.",
+    "parents": []
+  },
+  {
+    "key": "person61",
+    "name": "Person 61",
+    "generation": 5,
+    "role": "Barnbarnsbarnsbarn",
+    "relation": "Barnbarnsbarnsbarn",
+    "description": "Yngsta generationen i släkten.",
+    "parents": []
+  },
+  {
+    "key": "person62",
+    "name": "Person 62",
+    "generation": 5,
+    "role": "Barnbarnsbarnsbarn",
+    "relation": "Barnbarnsbarnsbarn",
+    "description": "Yngsta generationen i släkten.",
+    "parents": []
+  }
+]

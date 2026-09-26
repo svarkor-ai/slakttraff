@@ -4,6 +4,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.auth import require_token
 from app.database import get_db
 from app.models.registration import Registration
 from app.schemas.registration import (
@@ -12,7 +13,9 @@ from app.schemas.registration import (
     RegistrationUpdate,
 )
 
-router = APIRouter(prefix="/api/registrations", tags=["registrations"])
+router = APIRouter(
+    prefix="/api/registrations", tags=["registrations"], dependencies=[Depends(require_token)]
+)
 
 
 @router.post("/", response_model=RegistrationResponse, status_code=status.HTTP_201_CREATED)

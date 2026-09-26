@@ -5,3 +5,5 @@ __pycache__/
 *.backup
 data/*.db
 teddy/__pycache__/
+data/family.json
+.tmp/

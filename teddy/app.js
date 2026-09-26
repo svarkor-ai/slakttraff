@@ -49,15 +49,26 @@ async function answerRsvp(status) {
         return;
     }
     const personId = currentPersonId;
+    const email = document.getElementById('rsvp-email').value.trim();
+    if (!email) {
+        showError('Fyll i din e-postadress så vi kan nå dig.');
+        return;
+    }
+    const contact = {
+        email: email,
+        phone: document.getElementById('rsvp-phone').value.trim(),
+        notes: document.getElementById('rsvp-notes').value.trim(),
+    };
     const buttons = [document.getElementById('rsvp-accept-btn'), document.getElementById('rsvp-decline-btn')];
     buttons.forEach(btn => { btn.disabled = true; });
     try {
-        const updated = await API.submitRsvp(personId, status);
+        const updated = await API.submitRsvp(personId, status, contact);
         personsById[personId] = updated;
         applyRsvpColour(personId, updated.rsvp_status);
         document.getElementById('modal-rsvp-status').textContent = rsvpStatusText(updated.rsvp_status);
         updateTreeStats(Object.values(personsById));
         showError(null);
+        closeModal();
     } catch (err) {
         showError('Kunde inte spara ditt svar: ' + err.message);
     } finally {
@@ -141,6 +152,37 @@ function bindForm() {
     });
 }
 
+/* --- Password gate --- */
+
+function showPasswordScreen() {
+    document.getElementById('password-screen').style.display = 'flex';
+    document.getElementById('site-content').hidden = true;
+    document.getElementById('password-input').value = '';
+    document.getElementById('password-error').textContent = '';
+}
+
+function showSiteContent() {
+    document.getElementById('password-screen').style.display = 'none';
+    document.getElementById('site-content').hidden = false;
+}
+
+function bindPasswordGate() {
+    const form = document.getElementById('password-form');
+    form.addEventListener('submit', async e => {
+        e.preventDefault();
+        const password = document.getElementById('password-input').value;
+        const errorEl = document.getElementById('password-error');
+        errorEl.textContent = '';
+        const token = await API.login(password);
+        if (!token) {
+            errorEl.textContent = 'Fel lösenord. Försök igen.';
+            return;
+        }
+        showSiteContent();
+        init();
+    });
+}
+
 /* --- Init --- */
 
 async function init() {
@@ -160,7 +202,14 @@ async function init() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    init();
+    API.onUnauthorized = showPasswordScreen;
+    bindPasswordGate();
     bindModal();
     bindForm();
+    if (API.token()) {
+        showSiteContent();
+        init();
+    } else {
+        showPasswordScreen();
+    }
 });

@@ -1,53 +1,88 @@
 # ARCHITECTURE — Släktträff (svarkor-slakttraff-anmalan)
 
 Family-reunion signup backend + frontend, served as ONE origin. Status: functional —
-open click-and-answer RSVP live, tree rendered from API data (build 2026-09-25).
+site-password gated, RSVP with contact info, tree rendered from API data
+(build 2026-09-26). Public at sibbamala.com/slakttraff (vm106 reconciler).
 
 ## Tree
 
 ```
+server.py           Repo-root entrypoint for the host: reads PORT env, runs uvicorn
+                    on 0.0.0.0:$PORT (no reload). Default port 8119.
+hosting.yaml        Hosting manifest for the vm106 reconciler (strict JSON).
 app/
   main.py            FastAPI app: CORS (env SLAKTTRAFF_CORS_ORIGINS), /health,
                      seeds family tree on fresh DB, mounts teddy/ as static files at "/"
+  auth.py            Site-password gate: SITE_PASSWORD env (default "sibbamala"),
+                     hmac.compare_digest check, in-memory opaque session tokens
+                     (12 h TTL), 0.5 s per-IP delay on wrong passwords, require_token dep
   database.py        SQLAlchemy engine; SQLite at data/slakttraff.db (env SLAKTTRAFF_DATABASE_URL)
-  seed.py            FAMILY data + seed_persons_if_empty() (runs once when table empty)
+  seed.py            Loads data/family.json + seed_persons_if_empty() (empty tree + log
+                     warning when the file is missing)
   models/person.py        Person (name, birth_year, generation, role, relation, description,
                            parents/children/spouses JSON, rsvp_status, rsvp_token [legacy, unused])
   models/registration.py  Registration (name, email, generations, group_size, notes)
+  models/rsvp_reply.py    RsvpReply (person_id FK, status, email, phone, notes) — contact
+                           info submitted with an RSVP; admin-visible only
   schemas/enums.py        Generation, GroupSize, RsvpStatus
-  schemas/person.py       PersonBase/Create/Update/Person/PersonResponse/RsvpSubmit (status only)
+  schemas/person.py       PersonBase/Create/Update/Person/PersonResponse,
+                          RsvpSubmit (status + email + phone? + notes?), RsvpReplyResponse
   schemas/registration.py RegistrationBase/Create/Update/Registration/RegistrationResponse
-  routers/persons.py      /api/persons CRUD + POST /api/persons/{id}/rsvp (OPEN: no token)
-  routers/registrations.py /api/registrations CRUD
+  routers/auth.py         POST /api/auth {"password"} -> {"token"} (403 on wrong password)
+  routers/persons.py      /api/persons CRUD + POST /api/persons/{id}/rsvp (token required)
+  routers/registrations.py /api/registrations CRUD (token required)
+  routers/rsvp_replies.py  GET /api/rsvp-replies (token required; the admin contact-info view)
 teddy/
-  index.html          markup only (header, tree container, form, person modal)
-  style.css           base layout, header, sections, modal, responsive
+  index.html          markup (password screen, header, tree container, form, person modal
+                      with contact fields)
+  style.css           base layout, header, password screen, modal, responsive
   tree.css            family tree, person spots, RSVP colour states (green/red)
   forms.css           registration form + success message
-  api.js              API client (fetchPersons, submitRsvp, submitRegistration)
+  api.js              API client (login, fetchPersons, submitRsvp, submitRegistration);
+                      sends Bearer token, on 401 clears token + returns to password screen
   tree.js             tree rendering from API data + RSVP colour application
-  app.js              page wiring: init/load, person modal + RSVP buttons, form submit
+  app.js              page wiring: password gate, init/load, person modal + RSVP +
+                      contact fields, form submit
 tests/test_api.py    pytest contract tests (TestClient, isolated temp DB)
-data/                SQLite database (gitignored)
+data/
+  family.json           real family data (GITIGNORED — personal data, never commit)
+  family.json.example   placeholder shape ("Person 1"...) committed for fresh clones
 ```
 
 ## Entrypoint
 
-`.venv/bin/uvicorn app.main:app --port <PORT>` — GET / serves the tree page,
-`/api/*` the JSON API, `/health` the health check. All one origin.
+`PORT=8119 python3 server.py` (or `.venv/bin/uvicorn app.main:app --port 8119`) —
+GET / serves the password screen, `/api/*` the JSON API, `/health` the health check.
+All one origin.
+
+## Password flow (owner decision 2026-09-26)
+
+The whole site sits behind ONE shared password. `POST /api/auth {"password": ...}`
+compares with `hmac.compare_digest` against `SITE_PASSWORD` (env var, default
+`sibbamala` — never hardcoded beyond that default) and returns an opaque
+`secrets.token_hex` session token kept in-memory (12 h TTL). Wrong passwords get a
+0.5 s per-IP delay to blunt brute force and return 403. Every persons /
+registrations / rsvp-replies endpoint requires `Authorization: Bearer <token>`
+(401 without). The frontend stores the token in sessionStorage, shows the password
+screen first, and returns to it on any 401.
 
 ## Data store
 
 Single SQLite file `data/slakttraff.db`. No migrations tool; `Base.metadata.create_all`
-at import, then `seed_persons_if_empty()` seeds the 62-person family tree once.
+at import, then `seed_persons_if_empty()` seeds the family tree from
+`data/family.json` once (empty tree + log warning if that file is missing).
 
-## RSVP model (owner decision 2026-09-25, "open click-and-answer")
+## RSVP model (owner decisions 2026-09-25 + 2026-09-26)
 
-POST /api/persons/{id}/rsvp takes `{"status": "accepted"|"declined"}` with NO token.
-`pending` and unknown values → 422; unknown person → 404. The `rsvp_token` column is
-kept but unused. Spot colours: green = accepted, red = declined, original = pending.
+POST /api/persons/{id}/rsvp takes `{"status": "accepted"|"declined", "email": ...,
+"phone"?, "notes"?}` with a valid session token. `pending` and unknown values → 422;
+missing/invalid email → 422; unknown person → 404. Each reply is stored as an
+RsvpReply row; contact info is exposed ONLY via the token-protected
+GET /api/rsvp-replies (admin view). Spot colours: green = accepted, red = declined,
+original = pending.
 
 ## Known open items
 
-- Write/delete endpoints are unauthenticated (no auth concept yet — owner decision pending).
+- Session tokens are in-memory: a server restart logs everyone out (acceptable for
+  this event site; revisit if persistence is wanted).
 - `teddy/48.*` files are dispatch artifacts, not product code.

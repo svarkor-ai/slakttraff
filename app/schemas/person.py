@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from app.schemas.enums import Generation, RsvpStatus
 
@@ -78,6 +78,25 @@ class PersonResponse(Person):
 
 
 class RsvpSubmit(BaseModel):
-    """Input schema for the RSVP endpoint (open click-and-answer, no token)."""
+    """Input schema for the RSVP endpoint (password-gated click-and-answer)."""
 
     status: RsvpStatus = Field(..., description="accepted or declined")
+    email: EmailStr = Field(..., max_length=300, description="Contact email address")
+    phone: Optional[str] = Field(None, max_length=50, description="Optional phone number")
+    notes: Optional[str] = Field(
+        None, max_length=1000, description="Optional notes (allergies, questions, ...)"
+    )
+
+
+class RsvpReplyResponse(BaseModel):
+    """API response schema for a stored RSVP reply (admin view only)."""
+
+    id: int
+    person_id: int
+    status: str
+    email: str
+    phone: Optional[str] = None
+    notes: Optional[str] = None
+    created_at: datetime
+
+    model_config = {"frozen": True}

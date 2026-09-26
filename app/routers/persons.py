@@ -5,12 +5,16 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.auth import require_token
 from app.database import get_db
 from app.models.person import Person
+from app.models.rsvp_reply import RsvpReply
 from app.schemas.enums import RsvpStatus
 from app.schemas.person import PersonCreate, PersonResponse, PersonUpdate, RsvpSubmit
 
-router = APIRouter(prefix="/api/persons", tags=["persons"])
+router = APIRouter(
+    prefix="/api/persons", tags=["persons"], dependencies=[Depends(require_token)]
+)
 
 
 @router.post("/", response_model=PersonResponse, status_code=status.HTTP_201_CREATED)
@@ -73,7 +77,7 @@ def delete_person(person_id: int, db: Session = Depends(get_db)):
 
 @router.post("/{person_id}/rsvp", response_model=PersonResponse)
 def submit_rsvp(person_id: int, rsvp: RsvpSubmit, db: Session = Depends(get_db)):
-    """Accept or decline the invitation. Open click-and-answer: no token required."""
+    """Accept or decline the invitation, storing the submitted contact info."""
     db_person = db.query(Person).filter(Person.id == person_id).first()
     if db_person is None:
         raise HTTPException(status_code=404, detail="Person not found")
@@ -81,6 +85,13 @@ def submit_rsvp(person_id: int, rsvp: RsvpSubmit, db: Session = Depends(get_db))
         raise HTTPException(status_code=422, detail="RSVP must be accepted or declined")
 
     db_person.rsvp_status = rsvp.status.value
+    db.add(RsvpReply(
+        person_id=person_id,
+        status=rsvp.status.value,
+        email=rsvp.email,
+        phone=rsvp.phone,
+        notes=rsvp.notes,
+    ))
     db.commit()
     db.refresh(db_person)
     return db_person

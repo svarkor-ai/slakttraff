@@ -9,8 +9,23 @@
     <link rel="stylesheet" href="/forms.css">
 </head>
 <body>
+    <!-- Password gate: shown first; the tree page stays hidden until auth succeeds -->
+    <div class="password-screen" id="password-screen">
+        <div class="password-box">
+            <h1>🌳 Släktträff 2026</h1>
+            <p class="password-lead">Ange sidans lösenord för att se släktträdet och svara på inbjudan.</p>
+            <form id="password-form">
+                <input type="password" id="password-input" name="password"
+                       placeholder="Lösenord" autocomplete="current-password" required>
+                <button type="submit" class="submit-btn">Logga in</button>
+                <p class="password-error" id="password-error" role="alert"></p>
+            </form>
+        </div>
+    </div>
+
+    <div id="site-content" class="site-content" hidden>
     <header>
-        <h1>🌳 Släktträff 2026</h1>
+        <h1>🌳 Släktträff i Sibbamåla hembygdsförening, datum annonseras snart</h1>
         <p>Gemenskap · Minnen · Framtid</p>
         <p class="subtitle">Anmäl dig till årets släktträff och utforska vårt släktträd</p>
     </header>
@@ -115,6 +130,8 @@
         </section>
     </div>
 
+    </div><!-- /site-content -->
+
     <!-- Modal for person info + RSVP -->
     <div class="modal" id="person-modal">
         <div class="modal-content">
@@ -131,6 +148,21 @@
                 <button class="rsvp-btn decline" id="rsvp-decline-btn">Kommer inte ✗</button>
             </div>
             <p class="rsvp-status-line" id="modal-rsvp-status"></p>
+            <div class="rsvp-contact">
+                <h4>Dina kontaktuppgifter (syns bara för administratören)</h4>
+                <div class="form-group">
+                    <label for="rsvp-email">E-postadress *</label>
+                    <input type="email" id="rsvp-email" name="email" required placeholder="din@email.se">
+                </div>
+                <div class="form-group">
+                    <label for="rsvp-phone">Telefon (frivillig)</label>
+                    <input type="tel" id="rsvp-phone" name="phone" placeholder="070-123 45 67">
+                </div>
+                <div class="form-group">
+                    <label for="rsvp-notes">Meddelande (frivilligt)</label>
+                    <textarea id="rsvp-notes" name="notes" placeholder="T.ex. allergier, frågor..."></textarea>
+                </div>
+            </div>
         </div>
     </div>
 
