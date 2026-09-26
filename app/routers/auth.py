@@ -38,13 +38,9 @@ def authenticate(payload: AuthRequest, request: Request):
 def admin_authenticate(payload: AuthRequest, request: Request):
     """Exchange the admin password for an admin session token.
 
-    404 when ADMIN_PASSWORD is unset: the admin surface does not exist.
     """
     from app.auth import ADMIN_PASSWORD
 
-    if ADMIN_PASSWORD is None:
-        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND,
-                            content={"detail": "Not found"})
     client_ip = request.client.host if request.client else "-"
     if not verify_admin_password(payload.password, client_ip):
         return JSONResponse(

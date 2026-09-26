@@ -17,9 +17,8 @@ from fastapi import Header, HTTPException, status
 
 # Default is the owner-approved site password; override with SITE_PASSWORD.
 SITE_PASSWORD = os.environ.get("SITE_PASSWORD", "sibbamala")
-# Admin password: NO default. When unset, admin endpoints return 404 so the
-# admin surface does not exist at all on a deployment that never configured it.
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD") or None
+# Admin password: owner-approved default; override with ADMIN_PASSWORD.
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "grisfest")
 FAILED_ATTEMPTS_ALLOWED = 5
 FAILED_ATTEMPT_WINDOW_SECONDS = 60.0
 
@@ -83,8 +82,6 @@ def is_valid_token(token: str) -> bool:
 
 def verify_admin_password(candidate: str, ip: str = "-") -> bool:
     """Constant-time admin password check; rate-limits the IP on failure."""
-    if ADMIN_PASSWORD is None:
-        return False
     ok = hmac.compare_digest(
         candidate.encode("utf-8"), ADMIN_PASSWORD.encode("utf-8")
     )
@@ -125,12 +122,8 @@ def require_token(authorization: str = Header(default="")) -> None:
 def require_admin_token(authorization: str = Header(default="")) -> None:
     """FastAPI dependency for admin-only endpoints.
 
-    404 when ADMIN_PASSWORD is not configured (the admin surface does not
-    exist on that deployment), 401 without a valid admin Bearer token.
+    401 without a valid admin Bearer token.
     """
-    if ADMIN_PASSWORD is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail="Not found")
     if authorization.startswith("Bearer "):
         token = authorization[len("Bearer "):]
         if is_valid_admin_token(token):

@@ -129,12 +129,12 @@ def test_api_requires_token():
     assert client.post("/api/persons/", json=_person_payload()).status_code == 401
 
 
-def test_admin_endpoints_404_without_admin_password():
-    """ADMIN_PASSWORD unset (default): the admin surface does not exist."""
-    assert client.get("/api/rsvp-replies/").status_code == 404
-    assert client.get("/api/rsvp-replies/", headers=AUTH).status_code == 404
-    assert client.get("/api/registrations/", headers=AUTH).status_code == 404
-    assert client.post("/api/admin/auth", json={"password": "x"}).status_code == 404
+def test_admin_surface_exists_by_default():
+    """ADMIN_PASSWORD has an owner-approved default: the admin surface exists.
+    A site token must NOT grant admin access."""
+    assert client.post("/api/admin/auth", json={"password": "fel"}).status_code == 403
+    assert client.get("/api/rsvp-replies/", headers=AUTH).status_code == 401
+    assert client.get("/api/registrations/", headers=AUTH).status_code == 401
 
 
 def test_admin_auth_flow():

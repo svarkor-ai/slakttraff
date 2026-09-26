@@ -19,5 +19,5 @@ router = APIRouter(
 @router.get("/", response_model=List[RsvpReplyResponse])
 def list_rsvp_replies(skip: int = 0, limit: int = 500, db: Session = Depends(get_db)):
     """Contact info for every RSVP reply. Admin token required (404 when
-    ADMIN_PASSWORD is unset, 401 with a mere site token)."""
+    a mere site token is rejected)."""
     return db.query(RsvpReply).order_by(RsvpReply.id).offset(skip).limit(limit).all()

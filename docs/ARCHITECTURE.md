@@ -18,7 +18,7 @@ app/
                      in-memory opaque session tokens (12 h TTL), parallel-safe per-IP
                      failure counter (max 5/60 s → 429), require_token dep;
                      ADMIN_PASSWORD env (NO default) + admin token store +
-                     require_admin_token dep (404 when ADMIN_PASSWORD unset)
+                     require_admin_token dep (401 without admin token)
   database.py        SQLAlchemy engine; SQLite at data/slakttraff.db (env SLAKTTRAFF_DATABASE_URL)
   seed.py            Loads data/family.json + seed_persons_if_empty() (empty tree + log
                      warning when the file is missing)
@@ -33,7 +33,7 @@ app/
   schemas/registration.py RegistrationBase/Create/Update/Registration/RegistrationResponse
   routers/auth.py         POST /api/auth {"password"} -> {"token"} (403 wrong password,
                           429 when the per-IP failure limit trips) and
-                          POST /api/admin/auth -> admin token (404 when ADMIN_PASSWORD unset)
+                          POST /api/admin/auth -> admin token (403 on wrong password)
   routers/persons.py      GET persons + POST /api/persons/{id}/rsvp (site token);
                           POST/PUT/DELETE persons (admin token). RSVP is an UPSERT:
                           one RsvpReply row per person, repeat submits update it
@@ -81,8 +81,7 @@ gracefully).
 
 ## Admin flow (owner decision 2026-09-26, DA fix round 1)
 
-`ADMIN_PASSWORD` env, NO insecure default. When unset, every admin endpoint
-returns 404 — the admin surface does not exist on that deployment. When set,
+`ADMIN_PASSWORD` env, owner-approved default "grisfest" (2026-09-26).
 `POST /api/admin/auth {"password"}` returns a separate admin session token
 (own in-memory store; admin tokens also satisfy the site-token check). Admin
 token is required for: GET/PUT/DELETE on registrations, GET /api/rsvp-replies,
