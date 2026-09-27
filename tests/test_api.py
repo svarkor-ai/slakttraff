@@ -473,7 +473,7 @@ def test_admin_import_family_requires_admin_token():
 
 
 def test_admin_import_family_malformed_body(admin):
-    """Not-a-list and entries missing required fields are 422, never 500."""
+    """Not-a-list, missing fields and type-wrong fields are 422, never 500."""
     assert client.post("/api/admin/import-family", json={"name": "x"},
                        headers=admin).status_code == 422
     assert client.post("/api/admin/import-family", json=["not-a-dict"],
@@ -485,6 +485,43 @@ def test_admin_import_family_malformed_body(admin):
                        json=[{"key": "a", "name": "A", "generation": 1,
                               "parents": ["ghost"]}],
                        headers=admin).status_code == 422
+    # type-wrong shapes that previously reached the ORM and raised 500
+    assert client.post("/api/admin/import-family",
+                       json=[{"key": ["a"], "name": "X", "generation": 1}],
+                       headers=admin).status_code == 422
+    assert client.post("/api/admin/import-family",
+                       json=[{"key": "a", "name": None, "generation": 1}],
+                       headers=admin).status_code == 422
+    assert client.post("/api/admin/import-family",
+                       json=[{"key": "a", "name": "X", "generation": "senior"}],
+                       headers=admin).status_code == 422
+    assert client.post("/api/admin/import-family",
+                       json=[{"key": "a", "name": "X", "generation": True}],
+                       headers=admin).status_code == 422
+
+
+def test_admin_import_family_empty_list_rejected(admin):
+    """An empty import is never meaningful: 400, tree untouched."""
+    client.post("/api/admin/import-family", json=_family_entries(), headers=admin)
+    r = client.post("/api/admin/import-family", json=[], headers=admin)
+    assert r.status_code == 400
+    assert len(client.get("/api/persons/", headers=AUTH).json()) == 3
+
+
+def test_admin_import_family_after_registrations_no_orphan_fk(admin):
+    """Replace-all import must not leave orphaned registrations.person_id."""
+    rid = client.post("/api/registrations/", json=_registration_payload(),
+                      headers=AUTH).json()["id"]
+    r = client.post("/api/admin/import-family", json=_family_entries(), headers=admin)
+    assert r.status_code == 200
+    # the registration survives, its person link is cleared
+    reg = client.get(f"/api/registrations/{rid}", headers=admin).json()
+    assert reg["person_id"] is None
+    # no FK violations remain
+    from app.database import engine
+    with engine.connect() as conn:
+        violations = conn.exec_driver_sql("PRAGMA foreign_key_check").fetchall()
+    assert violations == []
 
 
 # --- Startup migration: registrations.person_id backfill (MC 1376.1 T3) ---

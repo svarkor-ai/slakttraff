@@ -104,9 +104,12 @@ disabled unless `SLAKTTRAFF_DEBUG=1`.
 
 ## Data store
 
-Single SQLite file `data/slakttraff.db`. No migrations tool; `Base.metadata.create_all`
+Single SQLite file `data/slakttraff.db`. Migrations run at startup
+(`app/migrations.py`, `run_startup_migrations()`); `Base.metadata.create_all`
 at import, then `seed_persons_if_empty()` seeds the family tree from
 `data/family.json` once (empty tree + log warning if that file is missing).
+Known limitation: duplicate registration emails are accepted and create one
+tree spot per registration — no dedup exists by design.
 
 ## RSVP model (owner decisions 2026-09-25 + 2026-09-26)
 
