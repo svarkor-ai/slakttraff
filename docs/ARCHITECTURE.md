@@ -17,11 +17,16 @@ app/
                      hmac.compare_digest check (UTF-8 encoded, any input -> 403 not 500),
                      in-memory opaque session tokens (12 h TTL), parallel-safe per-IP
                      failure counter (max 5/60 s → 429), require_token dep;
-                     ADMIN_PASSWORD env (NO default) + admin token store +
+                     ADMIN_PASSWORD env (default "grisfest", owner-approved
+                     2026-09-26) + admin token store +
                      require_admin_token dep (401 without admin token)
   database.py        SQLAlchemy engine; SQLite at data/slakttraff.db (env SLAKTTRAFF_DATABASE_URL)
   seed.py            Loads data/family.json + seed_persons_if_empty() (empty tree + log
                      warning when the file is missing)
+  services/family_import.py  import_family(db, entries) -> count: inserts one Person per
+                     family.json-style entry and wires parents/children (flush only —
+                     the caller owns the transaction). Shared by seed.py and the admin
+                     import endpoint.
   models/person.py        Person (name, birth_year, generation, role, relation, description,
                            parents/children/spouses JSON, rsvp_status, rsvp_token [legacy, unused])
   models/registration.py  Registration (name, email, generations, group_size, notes)
@@ -31,6 +36,12 @@ app/
   schemas/person.py       PersonBase/Create/Update/Person/PersonResponse,
                           RsvpSubmit (status + email + phone? + notes?), RsvpReplyResponse
   schemas/registration.py RegistrationBase/Create/Update/Registration/RegistrationResponse
+  routers/admin.py        POST /api/admin/import-family (admin token): replace-all import
+                          of a family.json-style entry list — deletes existing persons
+                          and their RsvpReply rows, inserts the posted list in one
+                          transaction, returns {"imported": N}. Malformed entries
+                          (missing key/name/generation, duplicate keys, unknown parent
+                          refs, non-object items) -> 422.
   routers/auth.py         POST /api/auth {"password"} -> {"token"} (403 wrong password,
                           429 when the per-IP failure limit trips) and
                           POST /api/admin/auth -> admin token (403 on wrong password)
@@ -85,7 +96,9 @@ gracefully).
 `POST /api/admin/auth {"password"}` returns a separate admin session token
 (own in-memory store; admin tokens also satisfy the site-token check). Admin
 token is required for: GET/PUT/DELETE on registrations, GET /api/rsvp-replies,
-and POST/PUT/DELETE on persons. The site password remains enough for GET tree
+POST/PUT/DELETE on persons, and POST /api/admin/import-family (replace-all
+family import for a running deployment — the gitignored data/family.json is
+pushed to the endpoint as JSON, never committed to the repo). The site password remains enough for GET tree
 data and the open RSVP endpoint. `/docs`, `/redoc` and `/openapi.json` are
 disabled unless `SLAKTTRAFF_DEBUG=1`.
 
