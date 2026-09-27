@@ -1,6 +1,6 @@
 """SQLAlchemy model for Registration."""
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime, JSON
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, JSON
 from app.database import Base
 
 class Registration(Base):
@@ -12,4 +12,5 @@ class Registration(Base):
     generations = Column(JSON, nullable=False)
     group_size = Column(String(10), nullable=False)
     notes = Column(String(1000), nullable=True)
+    person_id = Column(Integer, ForeignKey("persons.id"), nullable=True, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)

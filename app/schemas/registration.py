@@ -71,6 +71,9 @@ class Registration(RegistrationBase):
     """Full Registration model with ID and timestamp."""
 
     id: int = Field(..., description="Unique registration ID")
+    person_id: Optional[int] = Field(
+        None, description="Family-tree person created from this registration"
+    )
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc), description="Registration timestamp"
     )

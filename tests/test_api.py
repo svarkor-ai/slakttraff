@@ -368,6 +368,35 @@ def test_registration_create_and_list(admin):
     assert any(x["email"] == "karin@example.se" for x in r2.json())
 
 
+def test_registration_creates_tree_person(admin):
+    """A signup must be visible in the family tree: the registration links to a
+    new Person with the registrant's name and lowest chosen generation."""
+    payload = _registration_payload(name="Sven Svensson", generations=[3, 2])
+    r = client.post("/api/registrations/", json=payload, headers=AUTH)
+    assert r.status_code == 201, r.text
+    body = r.json()
+    person_id = body["person_id"]
+    assert isinstance(person_id, int)
+
+    persons = client.get("/api/persons/", headers=AUTH).json()
+    person = next(p for p in persons if p["id"] == person_id)
+    assert person["name"] == "Sven Svensson"
+    assert person["generation"] == 2  # lowest selected generation
+    assert person["role"] == "Anmäld"
+    assert person["rsvp_status"] == "pending"
+    # rsvp_token is deliberately not exposed by the API; check it in the DB.
+    from app.database import SessionLocal
+    from app.models.person import Person as PersonModel
+
+    db = SessionLocal()
+    try:
+        row = db.query(PersonModel).filter(PersonModel.id == person_id).first()
+        assert row is not None and len(row.rsvp_token) == 32  # uuid4().hex
+    finally:
+        db.close()
+    assert person["parents"] == [] and person["children"] == [] and person["spouses"] == []
+
+
 def test_registration_rejects_duplicate_generations():
     r = client.post(
         "/api/registrations/", json=_registration_payload(generations=[2, 2]), headers=AUTH

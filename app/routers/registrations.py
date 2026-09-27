@@ -1,11 +1,13 @@
 """Registration CRUD endpoints."""
 from typing import List
+from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.auth import require_admin_token, require_token
 from app.database import get_db
+from app.models.person import Person
 from app.models.registration import Registration
 from app.schemas.registration import (
     RegistrationCreate,
@@ -20,14 +22,26 @@ router = APIRouter(
 
 @router.post("/", response_model=RegistrationResponse, status_code=status.HTTP_201_CREATED)
 def create_registration(reg: RegistrationCreate, db: Session = Depends(get_db)):
+    generations = [g.value for g in reg.generations]
     db_reg = Registration(
         name=reg.name,
         email=reg.email,
-        generations=[g.value for g in reg.generations],
+        generations=generations,
         group_size=reg.group_size.value,
         notes=reg.notes,
     )
+    # Every signup gets a family-tree spot so the person is visible in the tree.
+    db_person = Person(
+        name=reg.name,
+        generation=min(generations),
+        role="Anmäld",
+        rsvp_status="pending",
+        rsvp_token=uuid4().hex,
+    )
     db.add(db_reg)
+    db.add(db_person)
+    db.flush()  # assign ids so the registration can reference the person
+    db_reg.person_id = db_person.id
     db.commit()
     db.refresh(db_reg)
     return db_reg
