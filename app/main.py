@@ -7,11 +7,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.database import Base, engine
+from app.migrations import run_startup_migrations
 from app.routers import admin, auth, persons, registrations, rsvp_replies
 from app.seed import seed_persons_if_empty
 
-# Create database tables and seed the family tree on a fresh database.
+# Create database tables, backfill columns on pre-existing DBs, and seed the
+# family tree on a fresh database.
 Base.metadata.create_all(bind=engine)
+run_startup_migrations(engine)
 seed_persons_if_empty()
 
 # API docs (/docs, /openapi.json) are disabled by default — free reconnaissance

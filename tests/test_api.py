@@ -485,3 +485,97 @@ def test_admin_import_family_malformed_body(admin):
                        json=[{"key": "a", "name": "A", "generation": 1,
                               "parents": ["ghost"]}],
                        headers=admin).status_code == 422
+
+
+# --- Startup migration: registrations.person_id backfill (MC 1376.1 T3) ---
+
+_OLD_SHAPE_SQL = [
+    # persons as it existed before T2-era changes that the live DB may predate
+    """CREATE TABLE persons (
+        id INTEGER PRIMARY KEY,
+        name VARCHAR(200) NOT NULL,
+        birth_year INTEGER,
+        generation INTEGER NOT NULL,
+        role VARCHAR(100),
+        relation VARCHAR(200),
+        description VARCHAR(500),
+        parents JSON,
+        children JSON,
+        spouses JSON,
+        rsvp_status VARCHAR(20) NOT NULL,
+        rsvp_token VARCHAR(64) NOT NULL,
+        created_at DATETIME,
+        updated_at DATETIME
+    )""",
+    # registrations WITHOUT person_id — the pre-T2 live shape
+    """CREATE TABLE registrations (
+        id INTEGER PRIMARY KEY,
+        name VARCHAR(200) NOT NULL,
+        email VARCHAR(300) NOT NULL,
+        generations JSON NOT NULL,
+        group_size VARCHAR(10) NOT NULL,
+        notes VARCHAR(1000),
+        created_at DATETIME
+    )""",
+]
+
+
+def _old_shape_engine(tmp_path):
+    from sqlalchemy import create_engine, text
+
+    engine = create_engine(
+        f"sqlite:///{tmp_path / 'old.db'}",
+        connect_args={"check_same_thread": False},
+    )
+    with engine.begin() as conn:
+        for ddl in _OLD_SHAPE_SQL:
+            conn.execute(text(ddl))
+    return engine
+
+
+def _registration_columns(engine):
+    from sqlalchemy import text
+
+    with engine.connect() as conn:
+        return {row[1] for row in conn.execute(text("PRAGMA table_info(registrations)"))}
+
+
+def test_startup_migration_backfills_person_id(tmp_path):
+    from app.migrations import run_startup_migrations
+
+    engine = _old_shape_engine(tmp_path)
+    assert "person_id" not in _registration_columns(engine)
+
+    run_startup_migrations(engine)
+    assert "person_id" in _registration_columns(engine)
+
+
+def test_startup_migration_is_idempotent(tmp_path):
+    from app.migrations import run_startup_migrations
+
+    engine = _old_shape_engine(tmp_path)
+    run_startup_migrations(engine)
+    run_startup_migrations(engine)  # second run must not raise or duplicate
+    cols = [c for c in _registration_columns(engine) if c == "person_id"]
+    assert cols == ["person_id"]
+
+
+def test_registration_post_works_on_migrated_old_db(tmp_path, monkeypatch):
+    """The deployed scenario: old-shape DB + migration + a real registration POST."""
+    from sqlalchemy import orm
+
+    from app import database as app_database
+    from app.migrations import run_startup_migrations
+
+    engine = _old_shape_engine(tmp_path)
+    run_startup_migrations(engine)
+
+    monkeypatch.setattr(
+        app_database,
+        "SessionLocal",
+        orm.sessionmaker(bind=engine, autocommit=False, autoflush=False),
+    )
+    r = client.post("/api/registrations/", json=_registration_payload(), headers=AUTH)
+    assert r.status_code == 201, r.text
+    body = r.json()
+    assert body["person_id"] is not None
