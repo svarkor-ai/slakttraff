@@ -29,7 +29,9 @@ app/
                      import endpoint.
   models/person.py        Person (name, birth_year, generation, role, relation, description,
                            parents/children/spouses JSON, rsvp_status, rsvp_token [legacy, unused])
-  models/registration.py  Registration (name, email, generations, group_size, notes)
+  models/registration.py  Registration (name, email, generations, group_size, notes,
+                           person_id — nullable FK to persons.id, the registration's
+                           family-tree spot)
   models/rsvp_reply.py    RsvpReply (person_id FK, status, email, phone, notes) — contact
                            info submitted with an RSVP; admin-visible only
   schemas/enums.py        Generation, GroupSize, RsvpStatus
@@ -41,7 +43,10 @@ app/
                           and their RsvpReply rows, inserts the posted list in one
                           transaction, returns {"imported": N}. Malformed entries
                           (missing key/name/generation, duplicate keys, unknown parent
-                          refs, non-object items) -> 422.
+                          refs, non-object items) -> 422; an empty list -> 400 (a
+                          replace-all of nothing would wipe the tree). Existing
+                          registrations.person_id links are nulled before the delete
+                          so no orphaned FK values survive the replace-all.
   routers/auth.py         POST /api/auth {"password"} -> {"token"} (403 wrong password,
                           429 when the per-IP failure limit trips) and
                           POST /api/admin/auth -> admin token (403 on wrong password)
@@ -49,6 +54,9 @@ app/
                           POST/PUT/DELETE persons (admin token). RSVP is an UPSERT:
                           one RsvpReply row per person, repeat submits update it
   routers/registrations.py POST /api/registrations/ (site token, the public signup form);
+                          each signup also creates a linked Person tree spot (role
+                          "Anmäld", rsvp pending, lowest selected generation) in the
+                          same transaction and stores its id in registrations.person_id.
                           GET/PUT/DELETE (admin token — registrations carry contact info)
   routers/rsvp_replies.py  GET /api/rsvp-replies (admin token only; the contact-info view)
 teddy/
