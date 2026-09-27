@@ -397,3 +397,62 @@ def test_registration_update_and_delete(admin):
     assert r.json()["group_size"] == "3"
     assert client.delete(f"/api/registrations/{rid}", headers=admin).status_code == 200
     assert client.get(f"/api/registrations/{rid}", headers=admin).status_code == 404
+
+
+# --- admin family import ---
+
+def _family_entries():
+    return [
+        {"key": "imp1", "name": "Import A", "generation": 1, "parents": []},
+        {"key": "imp2", "name": "Import B", "generation": 2, "parents": ["imp1"]},
+        {"key": "imp3", "name": "Import C", "generation": 2, "parents": ["imp1"]},
+    ]
+
+
+def test_admin_import_family_replaces_all(admin):
+    """Import with an admin token replaces the table and wires relations."""
+    r = client.post("/api/admin/import-family", json=_family_entries(), headers=admin)
+    assert r.status_code == 200
+    assert r.json() == {"imported": 3}
+
+    persons = client.get("/api/persons/", headers=AUTH).json()
+    assert len(persons) == 3
+    by_name = {p["name"]: p for p in persons}
+    assert set(by_name) == {"Import A", "Import B", "Import C"}
+    # parent/child wiring from the entry list survived the import
+    parent = by_name["Import A"]
+    assert sorted(parent["children"]) == sorted([by_name["Import B"]["id"],
+                                                 by_name["Import C"]["id"]])
+    assert parent["parents"] == []
+    assert by_name["Import B"]["parents"] == [parent["id"]]
+
+    # replace-all: a second import leaves only the new entries
+    r2 = client.post("/api/admin/import-family",
+                     json=[{"key": "solo", "name": "Solo", "generation": 1,
+                            "parents": []}], headers=admin)
+    assert r2.json() == {"imported": 1}
+    persons2 = client.get("/api/persons/", headers=AUTH).json()
+    assert [p["name"] for p in persons2] == ["Solo"]
+
+
+def test_admin_import_family_requires_admin_token():
+    """A site token (or no token) must not import family data."""
+    assert client.post("/api/admin/import-family",
+                       json=_family_entries()).status_code == 401
+    assert client.post("/api/admin/import-family",
+                       json=_family_entries(), headers=AUTH).status_code == 401
+
+
+def test_admin_import_family_malformed_body(admin):
+    """Not-a-list and entries missing required fields are 422, never 500."""
+    assert client.post("/api/admin/import-family", json={"name": "x"},
+                       headers=admin).status_code == 422
+    assert client.post("/api/admin/import-family", json=["not-a-dict"],
+                       headers=admin).status_code == 422
+    assert client.post("/api/admin/import-family",
+                       json=[{"name": "NoKey", "generation": 1}],
+                       headers=admin).status_code == 422
+    assert client.post("/api/admin/import-family",
+                       json=[{"key": "a", "name": "A", "generation": 1,
+                              "parents": ["ghost"]}],
+                       headers=admin).status_code == 422

@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.database import Base, engine
-from app.routers import auth, persons, registrations, rsvp_replies
+from app.routers import admin, auth, persons, registrations, rsvp_replies
 from app.seed import seed_persons_if_empty
 
 # Create database tables and seed the family tree on a fresh database.
@@ -37,6 +37,7 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(admin.router)
 app.include_router(auth.router)
 app.include_router(persons.router)
 app.include_router(registrations.router)

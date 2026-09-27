@@ -10,7 +10,7 @@ from pathlib import Path
 
 from app.database import SessionLocal
 from app.models.person import Person
-from app.schemas.enums import RsvpStatus
+from app.services.family_import import import_family
 
 logger = logging.getLogger("slakttraff.seed")
 
@@ -42,30 +42,8 @@ def seed_persons_if_empty() -> int:
     try:
         if db.query(Person).count() > 0:
             return 0
-        ids = {}
-        for entry in family:
-            person = Person(
-                name=entry["name"],
-                generation=entry["generation"],
-                role=entry.get("role", "Medlem"),
-                relation=entry.get("relation"),
-                description=entry.get("description"),
-                parents=[],
-                children=[],
-                spouses=[],
-                rsvp_status=RsvpStatus.PENDING.value,
-                rsvp_token=entry["key"],  # legacy column, no longer gated on
-            )
-            db.add(person)
-            db.flush()
-            ids[entry["key"]] = person.id
-        for entry in family:
-            person = db.query(Person).filter(Person.id == ids[entry["key"]]).first()
-            person.parents = [ids[p] for p in entry.get("parents", [])]
-            for p in entry.get("parents", []):
-                child = db.query(Person).filter(Person.id == ids[p]).first()
-                child.children = list(child.children or []) + [ids[entry["key"]]]
+        count = import_family(db, family)
         db.commit()
-        return len(family)
+        return count
     finally:
         db.close()
