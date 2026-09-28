@@ -498,6 +498,25 @@ def test_admin_import_family_malformed_body(admin):
     assert client.post("/api/admin/import-family",
                        json=[{"key": "a", "name": "X", "generation": True}],
                        headers=admin).status_code == 422
+    # optional fields must be strings (or null) when present, never 500
+    assert client.post("/api/admin/import-family",
+                       json=[{"key": "a", "name": "X", "generation": 1,
+                              "role": {"x": 1}}],
+                       headers=admin).status_code == 422
+    assert client.post("/api/admin/import-family",
+                       json=[{"key": "a", "name": "X", "generation": 1,
+                              "relation": ["parent"]}],
+                       headers=admin).status_code == 422
+    assert client.post("/api/admin/import-family",
+                       json=[{"key": "a", "name": "X", "generation": 1,
+                              "description": 42}],
+                       headers=admin).status_code == 422
+    # null optional fields and string values stay valid
+    assert client.post("/api/admin/import-family",
+                       json=[{"key": "a", "name": "X", "generation": 1,
+                              "role": None, "relation": None,
+                              "description": "text"}],
+                       headers=admin).status_code == 200
 
 
 def test_admin_import_family_empty_list_rejected(admin):

@@ -24,7 +24,9 @@ def _validate_entries(entries: List[dict]) -> None:
 
     Each entry must be an object with a non-empty string "key", a non-empty
     string "name", an int "generation" and an optional "parents" list of
-    known keys. An empty list is rejected with 400 by the endpoint: a
+    known keys. Optional "role", "relation" and "description", when present,
+    must be strings (or null) so they never reach the ORM type-wrong. An
+    empty list is rejected with 400 by the endpoint: a
     replace-all import of nothing would wipe the tree and let the startup
     seed resurrect stale data on the next restart.
     """
@@ -49,6 +51,12 @@ def _validate_entries(entries: List[dict]) -> None:
             raise HTTPException(status_code=422,
                                 detail=f"Duplicate key '{entry['key']}'")
         keys.add(entry["key"])
+        for field in ("role", "relation", "description"):
+            if field in entry and entry[field] is not None \
+                    and not isinstance(entry[field], str):
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"Entry {i} has a non-string '{field}'")
     for i, entry in enumerate(entries):
         parents = entry.get("parents", [])
         if not isinstance(parents, list) or not all(isinstance(p, str) for p in parents):
