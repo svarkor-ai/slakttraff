@@ -137,6 +137,10 @@ function bindForm() {
             formContainer.style.display = 'none';
             successMessage.classList.add('active');
             successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Re-fetch and re-render the tree so the new registration shows
+            // without a manual reload. init() shows its own error and leaves
+            // the success message untouched if the re-fetch fails.
+            await init();
         } catch (err) {
             showError('Kunde inte skicka anmälan: ' + err.message);
         } finally {
