@@ -10,6 +10,8 @@ site-password gated, RSVP with contact info, tree rendered from API data
 server.py           Repo-root entrypoint for the host: reads PORT env, runs uvicorn
                     on 0.0.0.0:$PORT (no reload). Default port 8120 (8119 is the live portfolio app).
 hosting.yaml        Hosting manifest for the vm106 reconciler (strict JSON).
+requirements.txt    Runtime deps, exact pins (vm106 build gate requirement).
+requirements-dev.txt  Test-only tools (pytest), not installed on the public host.
 app/
   main.py            FastAPI app: CORS (env SLAKTTRAFF_CORS_ORIGINS), /health,
                      seeds family tree on fresh DB, mounts teddy/ as static files at "/"
@@ -71,6 +73,8 @@ teddy/
   app.js              page wiring: password gate, init/load, person modal + RSVP +
                       contact fields, form submit
 tests/test_api.py    pytest contract tests (TestClient, isolated temp DB)
+tests/test_admin_import.py  admin family-import + startup-migration contract tests
+                     (split from test_api.py for file hygiene; same pattern)
 data/
   family.json           real family data (GITIGNORED — personal data, never commit)
   family.json.example   placeholder shape ("Person 1"...) committed for fresh clones
