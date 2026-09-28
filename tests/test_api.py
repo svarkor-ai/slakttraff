@@ -349,7 +349,19 @@ def test_root_serves_tree_page():
     r = client.get("/")
     assert r.status_code == 200
     assert "text/html" in r.headers["content-type"]
-    assert "/api.js" in r.text and "/tree.js" in r.text
+    assert 'src="api.js"' in r.text and 'src="tree.js"' in r.text
+
+
+def test_frontend_has_no_root_absolute_urls():
+    # vm106 serves the app under /slakttraff/ (nginx strips the prefix), so a root-anchored
+    # "/style.css" or fetch('/api/...') escapes the mount and 404s. Everything must be relative.
+    import re
+    from pathlib import Path
+    teddy = Path(__file__).resolve().parent.parent / "teddy"
+    pat = re.compile(r"""(?:href|src|action)=["']/(?!/)|(?:fetch|_request)\(\s*["'`]/(?!/)|url\(\s*["']?/(?!/)""")
+    hits = [f"{f.name}:{n}" for f in sorted(teddy.glob("*")) if f.suffix in (".html", ".js", ".css")
+            for n, line in enumerate(f.read_text(encoding="utf-8").splitlines(), 1) if pat.search(line)]
+    assert hits == [], f"root-absolute URLs break under the /slakttraff/ prefix: {hits}"
 
 
 def test_static_assets_served():

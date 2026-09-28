@@ -8,7 +8,7 @@ site-password gated, RSVP with contact info, tree rendered from API data
 
 ```
 server.py           Repo-root entrypoint for the host: reads PORT env, runs uvicorn
-                    on 0.0.0.0:$PORT (no reload). Default port 8119.
+                    on 0.0.0.0:$PORT (no reload). Default port 8120 (8119 is the live portfolio app).
 hosting.yaml        Hosting manifest for the vm106 reconciler (strict JSON).
 app/
   main.py            FastAPI app: CORS (env SLAKTTRAFF_CORS_ORIGINS), /health,
@@ -20,7 +20,7 @@ app/
                      ADMIN_PASSWORD env (default "grisfest", owner-approved
                      2026-09-26) + admin token store +
                      require_admin_token dep (401 without admin token)
-  database.py        SQLAlchemy engine; SQLite at data/slakttraff.db (env SLAKTTRAFF_DATABASE_URL)
+  database.py        SQLAlchemy engine; SQLite at data/slakttraff.db locally; $STATE_DIRECTORY/slakttraff.db on vm106 (set by server.py; env SLAKTTRAFF_DATABASE_URL wins)
   seed.py            Loads data/family.json + seed_persons_if_empty() (empty tree + log
                      warning when the file is missing)
   services/family_import.py  import_family(db, entries) -> count: inserts one Person per
@@ -78,7 +78,7 @@ data/
 
 ## Entrypoint
 
-`PORT=8119 python3 server.py` (or `.venv/bin/uvicorn app.main:app --port 8119`) —
+`PORT=8120 python3 server.py` (or `.venv/bin/uvicorn app.main:app --port 8120`) —
 GET / serves the password screen, `/api/*` the JSON API, `/health` the health check.
 All one origin.
 
@@ -112,7 +112,7 @@ disabled unless `SLAKTTRAFF_DEBUG=1`.
 
 ## Data store
 
-Single SQLite file `data/slakttraff.db`. Migrations run at startup
+Single SQLite file: `data/slakttraff.db` locally, `$STATE_DIRECTORY/slakttraff.db` on vm106 (the app dir is read-only there). Migrations run at startup
 (`app/migrations.py`, `run_startup_migrations()`); `Base.metadata.create_all`
 at import, then `seed_persons_if_empty()` seeds the family tree from
 `data/family.json` once (empty tree + log warning if that file is missing).
